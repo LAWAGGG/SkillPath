@@ -15,6 +15,15 @@ class RoadmapController extends Controller
         //
     }
 
+    public function adminRoadmaps(){
+        $roadmaps = Roadmap::all();
+
+        return response()->json([
+            "success"=>true,
+            "data"=>$roadmaps
+        ]);
+    }
+
     /**
      * Show the form for creating a new resource.
      */

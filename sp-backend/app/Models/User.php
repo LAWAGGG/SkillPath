@@ -37,4 +37,12 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function roadmaps(){
+        return $this->hasMany(Roadmap::class);
+    }
+
+    public function aiFeedbacks(){
+        return $this->hasMany(AiFeedback::class);
+    }
 }

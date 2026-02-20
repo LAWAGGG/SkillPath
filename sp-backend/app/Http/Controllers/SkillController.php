@@ -15,7 +15,7 @@ class SkillController extends Controller
     {
         $query = Skill::with("category");
 
-        if($request->category){
+        if ($request->category) {
             $query->whereHas("category", function ($cat) use ($request) {
                 $cat->where("slug", "LIKE", "%{$request->category}%");
             });
@@ -24,24 +24,9 @@ class SkillController extends Controller
         $skills = $query->get();
 
         return response()->json([
-            "skills"=>$skills
+            "success" => true,
+            "data" => $skills
         ]);
-    }
-
-    public function skillCategories(){
-        $categories = SkillCategory::all();
-
-        return response()->json([
-            "skill_categories"=>$categories
-        ]);
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
     }
 
     /**
@@ -49,7 +34,21 @@ class SkillController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            "skill_category_id" => "required|exists:skill_categories,id",
+            "name" => "required",
+            "slug" => "required",
+            "description" => "required",
+            "is_active" => "required|boolean",
+        ]);
+
+        $skill = Skill::create($request->all());
+
+        return response()->json([
+            "success" => true,
+            "message" => "Skill created succesfully",
+            "data" => $skill
+        ], 201);
     }
 
     /**
@@ -71,16 +70,53 @@ class SkillController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Skill $skill)
+    public function update(Request $request, string $id)
     {
-        //
+        $skill = Skill::find($id);
+
+        if (!$skill) {
+            return response()->json([
+                "success" => false,
+                "message" => "Skill not found",
+            ], 404);
+        }
+
+        $request->validate([
+            "skill_category_id" => "required|exists:skill_categories,id",
+            "name" => "required",
+            "slug" => "required",
+            "description" => "required",
+            "is_active" => "required|boolean",
+        ]);
+
+        $skill->update($request->all());
+
+        return response()->json([
+            "success" => true,
+            "message" => "Skill updated succesfully",
+            "data" => $skill
+        ]);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Skill $skill)
+    public function destroy(string $id)
     {
-        //
+        $skill = Skill::find($id);
+
+        if (!$skill) {
+            return response()->json([
+                "success" => false,
+                "message" => "Skill not found",
+            ], 404);
+        }
+
+        $skill->delete();
+
+        return response()->json([
+            "success" => true,
+            "message" => "Skill deleted succesfully",
+        ]);
     }
 }

@@ -6,5 +6,15 @@ use Illuminate\Database\Eloquent\Model;
 
 class AiFeedback extends Model
 {
-    //
+    protected $guarded = [];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function roadmap()
+    {
+        return $this->belongsTo(Roadmap::class);
+    }
 }
