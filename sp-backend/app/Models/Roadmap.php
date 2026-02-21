@@ -19,4 +19,8 @@ class Roadmap extends Model
     public function roadmapPhases(){
         return $this->hasMany(RoadmapPhase::class);
     }
+
+    public function aiFeedbacks(){
+        return $this->hasMany(AiFeedback::class);
+    }
 }

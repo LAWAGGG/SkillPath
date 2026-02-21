@@ -33,7 +33,7 @@ Route::middleware("auth:sanctum")->group(function () {
 
     //ai feedback
     Route::post('/ai/feedback/{roadmapId}', [AiFeedbackController::class, "store"]);
-    Route::get('/ai/feedback/{roadmapId}', [AiFeedbackController::class, "show"]);
+    Route::get('/ai/feedbacks/{roadmapId}', [AiFeedbackController::class, "show"]);
 
     //admin features
     Route::middleware([AdminMiddleware::class])->group(function () {

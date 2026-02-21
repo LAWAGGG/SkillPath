@@ -43,6 +43,6 @@ class User extends Authenticatable
     }
 
     public function aiFeedbacks(){
-        return $this->hasMany(AiFeedback::class);
+        return $this->hasMany(AiFeedback::class, "user_id");
     }
 }

@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AiFeedback;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class AiFeedbackController extends Controller
 {
@@ -27,7 +29,21 @@ class AiFeedbackController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $user = Auth::guard("sanctum")->user();
+        $feedbacks = AiFeedback::with("roadmap", "user")->whereHas("roadmap", function ($roadmap) use ($id) {
+            $roadmap->where("id", $id);
+        })->get();
+
+        if($feedbacks[0]->user->id !== $user->id){
+            return response()->json([
+                "message"=>"Forbidden Access"
+            ],403);
+        }
+
+        return response()->json([
+            "success"=>true,
+            "data"=>$feedbacks
+        ]);
     }
 
     /**
