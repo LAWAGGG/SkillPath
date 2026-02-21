@@ -1,0 +1,253 @@
+[90m= [39m[
+    "[34mringkasan[39m" => "[32mRoadmap ini dirancang untuk pemula yang ingin menguasai UI/UX Design dan siap memulai karir freelance dalam waktu sekitar 4 bulan. Fokusnya adalah membangun pemahaman fundamental, menguasai tools esensial, dan menciptakan portofolio yang menarik.[39m",
+    "[34mestimasi_total_hari[39m" => [35m115[39m,
+    "[34mtingkat_kesulitan[39m" => "[32mPemula[39m",
+    "[34mtips_sukses[39m" => [
+      "[32mKonsisten belajar 1.5 jam setiap hari. Disiplin adalah kunci.[39m",
+      "[32mTerapkan setiap konsep yang dipelajari dengan langsung membuat proyek kecil atau redesign aplikasi yang sudah ada.[39m",
+      "[32mManfaatkan komunitas UI/UX online (Discord, LinkedIn) untuk bertanya, berbagi, dan mendapatkan feedback.[39m",
+      "[32mMulai membangun portofolio sejak dini, bahkan dengan proyek-proyek latihan.[39m",
+      "[32mJangan takut mencoba dan gagal. Proses iterasi adalah bagian penting dari desain.[39m",
+    ],
+    "[34mperingatan[39m" => "[32mTarget 'bisa freelance dalam 4 bulan' untuk pemula adalah sangat ambisius dan membutuhkan komitmen serta konsistensi yang tinggi. Roadmap ini padat dan mengasumsikan Anda benar-benar fokus 1.5 jam setiap hari. Deadline 2025-06-30 akan menjadi buffer jika Anda membutuhkan lebih banyak waktu untuk memperdalam materi atau membangun portofolio.[39m",
+    "[34mphases[39m" => [
+      [
+        "[34mphase_title[39m" => "[32mFase 1: Fondasi UI/UX & Penguasaan Tools Dasar[39m",
+        "[34morder[39m" => [35m1[39m,
+        "[34mdurasi_estimasi_hari[39m" => [35m25[39m,
+        "[34mtopics[39m" => [
+          [
+            "[34mtopic_title[39m" => "[32mPengantar UI/UX Design[39m",
+            "[34mdescription[39m" => "[32mMemahami perbedaan UI dan UX, pentingnya user-centered design, dan siklus desain UX.[39m",
+            "[34morder[39m" => [35m1[39m,
+            "[34mresources[39m" => [
+              [
+                "[34mtitle[39m" => "[32mWhat is UI/UX Design? (Article)[39m",
+                "[34murl[39m" => "[32mhttps://careerfoundry.com/en/blog/ux-design/what-is-ui-ux-design-a-complete-guide/[39m",
+                "[34mtype[39m" => "[32martikel[39m",
+              ],
+              [
+                "[34mtitle[39m" => "[32mUX Design Basics (Video Playlist)[39m",
+                "[34murl[39m" => "[32mhttps://www.youtube.com/playlist?list=PL_JdC4jBqK18n9gI8U-p_9t6q01L_S2hR[39m",
+                "[34mtype[39m" => "[32mvideo[39m",
+              ],
+            ],
+          ],
+          [
+            "[34mtopic_title[39m" => "[32mPrinsip Dasar Desain & Heuristik Usability[39m",
+            "[34mdescription[39m" => "[32mMempelajari prinsip-prinsip desain visual (kontras, repetisi, aligment, proximity) dan Heuristik Jakob Nielsen untuk usability.[39m",
+            "[34morder[39m" => [35m2[39m,
+            "[34mresources[39m" => [
+              [
+                "[34mtitle[39m" => "[32mThe 5 Basic Principles of Graphic Design (Article)[39m",
+                "[34murl[39m" => "[32mhttps://99designs.com/blog/tips/design-principles/[39m",
+                "[34mtype[39m" => "[32martikel[39m",
+              ],
+              [
+                "[34mtitle[39m" => "[32mNielsen's 10 Usability Heuristics (Article)[39m",
+                "[34murl[39m" => "[32mhttps://www.nngroup.com/articles/ten-usability-heuristics/[39m",
+                "[34mtype[39m" => "[32martikel[39m",
+              ],
+            ],
+          ],
+          [
+            "[34mtopic_title[39m" => "[32mPengenalan Tools: Figma[39m",
+            "[34mdescription[39m" => "[32mMempelajari dasar-dasar Figma: interface, frames, shapes, teks, auto layout, komponen, dan prototyping sederhana.[39m",
+            "[34morder[39m" => [35m3[39m,
+            "[34mresources[39m" => [
+              [
+                "[34mtitle[39m" => "[32mFigma Learn: Get Started (Documentation)[39m",
+                "[34murl[39m" => "[32mhttps://help.figma.com/hc/en-us/categories/360002042853-Get-Started[39m",
+                "[34mtype[39m" => "[32mdokumentasi[39m",
+              ],
+              [
+                "[34mtitle[39m" => "[32mFigma Tutorial for Beginners (Video)[39m",
+                "[34murl[39m" => "[32mhttps://www.youtube.com/watch?v=FtE-s4y5Gk8[39m",
+                "[34mtype[39m" => "[32mvideo[39m",
+              ],
+            ],
+          ],
+        ],
+      ],
+      [
+        "[34mphase_title[39m" => "[32mFase 2: Desain Antarmuka (UI) & Prinsip Visual[39m",
+        "[34morder[39m" => [35m2[39m,
+        "[34mdurasi_estimasi_hari[39m" => [35m35[39m,
+        "[34mtopics[39m" => [
+          [
+            "[34mtopic_title[39m" => "[32mVisual Hierarchy, Typography & Color Theory[39m",
+            "[34mdescription[39m" => "[32mMenguasai cara memandu mata pengguna, memilih font yang tepat, dan menggunakan palet warna yang efektif dan sesuai brand.[39m",
+            "[34morder[39m" => [35m1[39m,
+            "[34mresources[39m" => [
+              [
+                "[34mtitle[39m" => "[32mUnderstanding Visual Hierarchy in UI Design (Article)[39m",
+                "[34murl[39m" => "[32mhttps://www.interaction-design.org/literature/article/understanding-visual-hierarchy-in-ui-design[39m",
+                "[34mtype[39m" => "[32martikel[39m",
+              ],
+              [
+                "[34mtitle[39m" => "[32mThe Ultimate Guide to Typography (Article)[39m",
+                "[34murl[39m" => "[32mhttps://www.canva.com/learn/typography-guide/[39m",
+                "[34mtype[39m" => "[32martikel[39m",
+              ],
+              [
+                "[34mtitle[39m" => "[32mColor Theory for Designers (Video)[39m",
+                "[34murl[39m" => "[32mhttps://www.youtube.com/watch?v=AvgCkwiHGM8[39m",
+                "[34mtype[39m" => "[32mvideo[39m",
+              ],
+            ],
+          ],
+          [
+            "[34mtopic_title[39m" => "[32mGrid Systems, Layouts & Konsistensi[39m",
+            "[34mdescription[39m" => "[32mBelajar menggunakan grid untuk layout yang rapi, responsive design, dan pentingnya konsistensi dalam elemen desain.[39m",
+            "[34morder[39m" => [35m2[39m,
+            "[34mresources[39m" => [
+              [
+                "[34mtitle[39m" => "[32mGrids in UI Design (Article)[39m",
+                "[34murl[39m" => "[32mhttps://uxdesign.cc/grids-in-ui-design-a-beginners-guide-7597143640[39m",
+                "[34mtype[39m" => "[32martikel[39m",
+              ],
+              [
+                "[34mtitle[39m" => "[32mUnderstanding Responsive Design (Article)[39m",
+                "[34murl[39m" => "[32mhttps://web.dev/responsive-web-design-basics/[39m",
+                "[34mtype[39m" => "[32martikel[39m",
+              ],
+            ],
+          ],
+          [
+            "[34mtopic_title[39m" => "[32mMembangun Komponen & Design System Dasar[39m",
+            "[34mdescription[39m" => "[32mMembuat komponen reusable di Figma dan memahami konsep dasar design system untuk efisiensi dan konsistensi.[39m",
+            "[34morder[39m" => [35m3[39m,
+            "[34mresources[39m" => [
+              [
+                "[34mtitle[39m" => "[32mFigma Components Tutorial (Video)[39m",
+                "[34murl[39m" => "[32mhttps://www.youtube.com/watch?v=F3aJ2N_W-c8[39m",
+                "[34mtype[39m" => "[32mvideo[39m",
+              ],
+              [
+                "[34mtitle[39m" => "[32mWhat is a Design System? (Article)[39m",
+                "[34murl[39m" => "[32mhttps://www.nngroup.com/articles/design-systems-101/[39m",
+                "[34mtype[39m" => "[32martikel[39m",
+              ],
+            ],
+          ],
+        ],
+      ],
+      [
+        "[34mphase_title[39m" => "[32mFase 3: Pengalaman Pengguna (UX) & Validasi[39m",
+        "[34morder[39m" => [35m3[39m,
+        "[34mdurasi_estimasi_hari[39m" => [35m30[39m,
+        "[34mtopics[39m" => [
+          [
+            "[34mtopic_title[39m" => "[32mUX Research Dasar & Persona[39m",
+            "[34mdescription[39m" => "[32mMempelajari metode riset dasar (survei, wawancara) dan membuat user persona untuk memahami target pengguna.[39m",
+            "[34morder[39m" => [35m1[39m,
+            "[34mresources[39m" => [
+              [
+                "[34mtitle[39m" => "[32mIntroduction to UX Research (Article)[39m",
+                "[34murl[39m" => "[32mhttps://www.interaction-design.org/literature/topics/ux-research[39m",
+                "[34mtype[39m" => "[32martikel[39m",
+              ],
+              [
+                "[34mtitle[39m" => "[32mHow to Create User Personas (Article)[39m",
+                "[34murl[39m" => "[32mhttps://www.nngroup.com/articles/persona/[39m",
+                "[34mtype[39m" => "[32martikel[39m",
+              ],
+            ],
+          ],
+          [
+            "[34mtopic_title[39m" => "[32mUser Flows, Sitemaps & Information Architecture[39m",
+            "[34mdescription[39m" => "[32mMerancang alur pengguna, membuat sitemap, dan menata informasi agar mudah diakses dan dipahami.[39m",
+            "[34morder[39m" => [35m2[39m,
+            "[34mresources[39m" => [
+              [
+                "[34mtitle[39m" => "[32mUser Flows: A Guide for UX Designers (Article)[39m",
+                "[34murl[39m" => "[32mhttps://uxplanet.org/user-flows-a-guide-for-ux-designers-f75f70a1a1f0[39m",
+                "[34mtype[39m" => "[32martikel[39m",
+              ],
+              [
+                "[34mtitle[39m" => "[32mIntroduction to Information Architecture (Article)[39m",
+                "[34murl[39m" => "[32mhttps://www.interaction-design.org/literature/topics/information-architecture[39m",
+                "[34mtype[39m" => "[32martikel[39m",
+              ],
+            ],
+          ],
+          [
+            "[34mtopic_title[39m" => "[32mWireframing, Prototyping & Usability Testing[39m",
+            "[34mdescription[39m" => "[32mMembuat wireframe (low-fidelity), prototype (high-fidelity), dan melakukan usability testing dasar untuk validasi desain.[39m",
+            "[34morder[39m" => [35m3[39m,
+            "[34mresources[39m" => [
+              [
+                "[34mtitle[39m" => "[32mWireframing, Prototyping, Mockuping (Article)[39m",
+                "[34murl[39m" => "[32mhttps://www.nngroup.com/articles/wireframes-prototypes-mockups/[39m",
+                "[34mtype[39m" => "[32martikel[39m",
+              ],
+              [
+                "[34mtitle[39m" => "[32mHow to Conduct Usability Testing (Article)[39m",
+                "[34murl[39m" => "[32mhttps://www.usability.gov/how-to-and-tools/methods/usability-testing.html[39m",
+                "[34mtype[39m" => "[32martikel[39m",
+              ],
+            ],
+          ],
+        ],
+      ],
+      [
+        "[34mphase_title[39m" => "[32mFase 4: Portofolio & Persiapan Freelance[39m",
+        "[34morder[39m" => [35m4[39m,
+        "[34mdurasi_estimasi_hari[39m" => [35m25[39m,
+        "[34mtopics[39m" => [
+          [
+            "[34mtopic_title[39m" => "[32mMembangun Studi Kasus (Case Study)[39m",
+            "[34mdescription[39m" => "[32mMenyusun proyek desain ke dalam format studi kasus yang menunjukkan proses berpikir dan solusi desain Anda.[39m",
+            "[34morder[39m" => [35m1[39m,
+            "[34mresources[39m" => [
+              [
+                "[34mtitle[39m" => "[32mHow to Create an Amazing UX Case Study (Article)[39m",
+                "[34murl[39m" => "[32mhttps://careerfoundry.com/en/blog/ux-design/how-to-create-an-amazing-ux-case-study/[39m",
+                "[34mtype[39m" => "[32martikel[39m",
+              ],
+              [
+                "[34mtitle[39m" => "[32mContoh UX Case Study (Artikel)[39m",
+                "[34murl[39m" => "[32mhttps://uxdesign.cc/how-to-write-a-ux-case-study-that-gets-you-hired-799423c8a93[39m",
+                "[34mtype[39m" => "[32martikel[39m",
+              ],
+            ],
+          ],
+          [
+            "[34mtopic_title[39m" => "[32mMembuat Portofolio Online[39m",
+            "[34mdescription[39m" => "[32mMemilih platform (Behance, Dribbble, personal website) dan menyajikan studi kasus serta proyek lainnya dengan profesional.[39m",
+            "[34morder[39m" => [35m2[39m,
+            "[34mresources[39m" => [
+              [
+                "[34mtitle[39m" => "[32mBest Portfolio Websites for Designers (Article)[39m",
+                "[34murl[39m" => "[32mhttps://www.creativebloq.com/features/best-portfolio-websites-for-designers[39m",
+                "[34mtype[39m" => "[32martikel[39m",
+              ],
+              [
+                "[34mtitle[39m" => "[32mCara Membuat Portofolio UI/UX (Video)[39m",
+                "[34murl[39m" => "[32mhttps://www.youtube.com/watch?v=F3aJ2N_W-c8[39m",
+                "[34mtype[39m" => "[32mvideo[39m",
+              ],
+            ],
+          ],
+          [
+            "[34mtopic_title[39m" => "[32mStrategi Mencari Klien Freelance[39m",
+            "[34mdescription[39m" => "[32mMempelajari platform freelance (Upwork, Fiverr), cara membuat proposal, dan membangun jaringan profesional.[39m",
+            "[34morder[39m" => [35m3[39m,
+            "[34mresources[39m" => [
+              [
+                "[34mtitle[39m" => "[32mHow to Get Your First Freelance UX Client (Article)[39m",
+                "[34murl[39m" => "[32mhttps://www.uxdesigninstitute.com/blog/how-to-get-your-first-freelance-ux-client/[39m",
+                "[34mtype[39m" => "[32martikel[39m",
+              ],
+              [
+                "[34mtitle[39m" => "[32mTips Memulai Freelance (Video)[39m",
+                "[34murl[39m" => "[32mhttps://www.youtube.com/watch?v=f-B2446fB9o[39m",
+                "[34mtype[39m" => "[32mvideo[39m",
+              ],
+            ],
+          ],
+        ],
+      ],
+    ],
+  ]
+

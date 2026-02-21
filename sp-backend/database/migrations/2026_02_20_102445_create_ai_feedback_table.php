@@ -16,6 +16,12 @@ return new class extends Migration
             $table->foreignId("user_id")->constrained()->onDelete("cascade");
             $table->foreignId("roadmap_id")->constrained()->onDelete("cascade");
             $table->integer("score_progress");
+            $table->text("apresiasi");
+            $table->text("analisis");
+            $table->json("saran_konkret");
+            $table->text("pesan_motivasi");
+            $table->boolean("perlu_penyesuaian_jadwal")->default(false);
+            $table->decimal("progress_saat_request");
             $table->timestamps();
         });
     }

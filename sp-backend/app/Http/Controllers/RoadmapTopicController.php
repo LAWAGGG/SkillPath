@@ -6,6 +6,8 @@ use App\Models\RoadmapTopic;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
+use function Symfony\Component\Clock\now;
+
 class RoadmapTopicController extends Controller
 {
     /**
@@ -73,7 +75,8 @@ class RoadmapTopicController extends Controller
         $toggle = $topic->is_completed == 0 ? 1 : 0;
 
         $topic->update([
-            "is_completed"=>$toggle
+            "is_completed"=>$toggle,
+            "completed_at"=>$toggle == 1 ? now() : null
         ]);
 
         return response()->json([
