@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Route;
 //skills
 Route::get("/skills", [SkillController::class, "index"]);
 Route::get("/skill-categories", [SkillCategoryController::class, "index"]);
+Route::get("/skills/recommendation", [SkillController::class, "recommendation"]);
 
 Route::prefix("/auth")->group(function () {
     Route::post("/register", [AuthController::class, "register"]);
@@ -22,6 +23,8 @@ Route::prefix("/auth")->group(function () {
 });
 
 Route::middleware("auth:sanctum")->group(function () {
+    Route::get('/user/dashboard', [UserController::class, "userDashboard"]);
+
     //roadmaps
     Route::post("/roadmaps/generate", [RoadmapController::class, "store"]);
     Route::get("/roadmaps", [RoadmapController::class, "index"]);

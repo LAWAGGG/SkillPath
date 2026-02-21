@@ -8,6 +8,10 @@ class Roadmap extends Model
 {
     protected $guarded = [];
 
+    protected $casts = [
+        "target_deadline"=>"date"
+    ];
+
     public function user(){
         return $this->belongsTo(User::class);
     }

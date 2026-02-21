@@ -9,9 +9,12 @@ use App\Models\Skill;
 use App\Models\TopicResource;
 use App\Models\User;
 use App\Services\GeminiService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+
+use function Symfony\Component\Clock\now;
 
 class RoadmapController extends Controller
 {
@@ -29,8 +32,6 @@ class RoadmapController extends Controller
         $user = Auth::guard("sanctum")->user();
         $roadmaps = Roadmap::with("skill", "roadmapPhases.roadmapTopics")->where("user_id", $user->id)->latest()->get();
 
-
-
         return response()->json([
             "success" => true,
             "data" => $roadmaps->map(function ($roadmap) {
@@ -40,6 +41,10 @@ class RoadmapController extends Controller
                     "hours_per_day" => $roadmap->hours_per_day,
                     "status" => $roadmap->status,
                     "skill" => $roadmap->skill->name,
+                    "days_left"=>round(Carbon::parse(now())->diffInDays($roadmap->target_deadline, false)) . " days left",
+                    "completed_topics_count"=>$roadmap->roadmapPhases->sum(function($phase){
+                        return $phase->roadmapTopics->where("is_completed", 1)->count();
+                    }),
                     "total_topics"=>$roadmap->roadmapPhases->sum(function($phase){
                         return $phase->roadmapTopics->count();
                     }),
@@ -50,7 +55,7 @@ class RoadmapController extends Controller
 
     public function adminRoadmaps()
     {
-        $roadmaps = Roadmap::all();
+        $roadmaps = Roadmap::latest()->get();
 
         return response()->json([
             "success" => true,
@@ -204,15 +209,18 @@ class RoadmapController extends Controller
                 "id" => $roadmap->id,
                 "title" => $roadmap->title,
                 "status" => $roadmap->status,
-                "progress_persen" => $progressPercent,
+                "hours_per_day" => $roadmap->hours_per_day,
+                "progress_pecent" => $progressPercent,
                 "target_deadline" => $roadmap->target_deadline,
                 "skill" => $roadmap->skill,
+                "days_left"=>round(Carbon::parse(now())->diffInDays($roadmap->target_deadline, false)) . " days left",
                 "phases" => $roadmap->roadmapPhases->map(function ($phase) {
                     return [
                         "id" => $phase->id,
                         "phase_title" => $phase->phase_title,
                         "order" => $phase->order,
                         "durasi_estimasi_hari" => $phase->durasi_estimasi_hari,
+                        "completed_topic"=>$phase->roadmapTopics->where("is_completed", 1)->count()/$phase->roadmapTopics->count(),
                         "topics" => $phase->roadmapTopics->map(function ($topic) {
                             return [
                                 "id" => $topic->id,

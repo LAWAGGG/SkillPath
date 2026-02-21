@@ -21,7 +21,27 @@ class SkillController extends Controller
             });
         }
 
+        if ($request->search) {
+            $query->where("slug", "LIKE", "%{$request->search}%");
+        }
+
         $skills = $query->get();
+
+        return response()->json([
+            "success" => true,
+            "data" => $skills
+        ]);
+    }
+
+    /**
+     * Display a listing of recommended skills.
+     */
+    public function recommendation()
+    {
+        $skills = Skill::withCount('roadmaps')
+            ->orderBy('roadmaps_count', 'desc')
+            ->limit(5)
+            ->get();
 
         return response()->json([
             "success" => true,
