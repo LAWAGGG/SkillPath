@@ -27,7 +27,9 @@ class RoadmapController extends Controller
     public function index()
     {
         $user = Auth::guard("sanctum")->user();
-        $roadmaps = Roadmap::with("skill")->where("user_id", $user->id)->latest()->get();
+        $roadmaps = Roadmap::with("skill", "roadmapPhases.roadmapTopics")->where("user_id", $user->id)->latest()->get();
+
+
 
         return response()->json([
             "success" => true,
@@ -37,7 +39,10 @@ class RoadmapController extends Controller
                     "title" => $roadmap->title,
                     "hours_per_day" => $roadmap->hours_per_day,
                     "status" => $roadmap->status,
-                    "skill" => $roadmap->skill->name
+                    "skill" => $roadmap->skill->name,
+                    "total_topics"=>$roadmap->roadmapPhases->sum(function($phase){
+                        return $phase->roadmapTopics->count();
+                    }),
                 ];
             })
         ]);
@@ -212,6 +217,7 @@ class RoadmapController extends Controller
                             return [
                                 "id" => $topic->id,
                                 "topic_title" => $topic->topic_title,
+                                "description" => $topic->description,
                                 "completed_at" => $topic->completed_at,
                                 "is_completed" => $topic->is_completed == 1 ? true : false,
                                 "resources" => $topic->topicResources->map(function ($resource) {
@@ -397,6 +403,19 @@ class RoadmapController extends Controller
                         }
                     }
                 }
+
+                // Cek status completion setelah regenerasi
+                $totalTopicsCount = RoadmapTopic::whereHas('roadmapPhase', function ($q) use ($roadmap) {
+                    $q->where('roadmap_id', $roadmap->id);
+                })->count();
+
+                $completedTopicsCount = RoadmapTopic::whereHas('roadmapPhase', function ($q) use ($roadmap) {
+                    $q->where('roadmap_id', $roadmap->id);
+                })->where('is_completed', 1)->count();
+
+                $roadmap->update([
+                    'status' => ($totalTopicsCount > 0 && $totalTopicsCount === $completedTopicsCount) ? 'completed' : 'active'
+                ]);
 
                 return $roadmap;
             });

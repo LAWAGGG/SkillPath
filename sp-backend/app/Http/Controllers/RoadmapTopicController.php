@@ -58,31 +58,47 @@ class RoadmapTopicController extends Controller
         $user = Auth::guard("sanctum")->user();
         $topic = RoadmapTopic::with("roadmapPhase.roadmap")->find($id);
 
-        if(!$topic){
+        if (!$topic) {
             return response()->json([
-                "success"=>false,
-                "message"=>"Topic not found"
-            ],404);
+                "success" => false,
+                "message" => "Topic not found"
+            ], 404);
         }
 
-        if($topic->roadmapPhase->roadmap->user_id !== $user->id){
+        if ($topic->roadmapPhase->roadmap->user_id !== $user->id) {
             return response()->json([
-                "success"=>false,
-                "message"=>"Forbidden Access"
-            ],403);
+                "success" => false,
+                "message" => "Forbidden Access"
+            ], 403);
         }
 
         $toggle = $topic->is_completed == 0 ? 1 : 0;
 
         $topic->update([
-            "is_completed"=>$toggle,
-            "completed_at"=>$toggle == 1 ? now() : null
+            "is_completed" => $toggle,
+            "completed_at" => $toggle == 1 ? now() : null
         ]);
 
+        // Cek apakah seluruh topik dalam roadmap sudah selesai
+        $roadmap = $topic->roadmapPhase->roadmap;
+
+        $allTopics = RoadmapTopic::whereHas('roadmapPhase', function ($query) use ($roadmap) {
+            $query->where('roadmap_id', $roadmap->id);
+        });
+
+        $totalTopics = (clone $allTopics)->count();
+        $completedTopics = (clone $allTopics)->where('is_completed', 1)->count();
+
+        $newStatus = ($totalTopics > 0 && $totalTopics === $completedTopics) ? 'completed' : 'active';
+
+        if ($roadmap->status !== $newStatus) {
+            $roadmap->update(['status' => $newStatus]);
+        }
+
         return response()->json([
-            "success"=>true,
-            "message"=>"Topic updated to {$toggle} succesfully",
-            "data"=>$topic
+            "success" => true,
+            "message" => "Topic updated to {$toggle} successfully",
+            "data" => $topic->load('roadmapPhase.roadmap')
         ]);
     }
 

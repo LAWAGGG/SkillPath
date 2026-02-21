@@ -84,9 +84,13 @@ Data pengguna:
 ATURAN RESOURCE (SANGAT PENTING):
 - DOCUMENTATION: Gunakan link dokumentasi resmi yang valid.
 - VIDEO: JANGAN buat link direct video (kecuali sangat yakin). Gunakan format search YouTube: https://www.youtube.com/results?search_query=[keyword+pencarian+relevan]
-- ARTICLE: JANGAN buat link direct. Gunakan format search Google: https://www.google.com/search?q=[keyword+pencarian+relevan]
-- JANGAN PERNAH gunakan link placeholder atau dummy seperti 'youtube.com/watch?v=example1', 'example.com', atau URL tidak lengkap. Lebih baik gunakan link pencarian di atas jika ragu.
-- Pastikan keyword pencarian spesifik dan membantu pengguna menemukan materi tersebut.
+- ARTICLE: JANGAN buat link direct. Gunakan format search Google dengan filter 'site:' sesuai topik. Gunakan KEYWORD DALAM BAHASA INGGRIS pada query pencarian agar hasil lebih akurat:
+  * HTML, CSS, JS, PHP Dasar, SQL, Git Dasar: gunakan 'site:w3schools.com'
+  * Laravel, Framework PHP: gunakan 'site:petanikode.com' atau 'site:malasngoding.com'
+  * Topik Mahir/Inggris: gunakan 'site:freecodecamp.org' atau 'site:dev.to'
+  * Format: https://www.google.com/search?q=[English+Keyword]+site:[domain]
+- JANGAN PERNAH gunakan link placeholder atau dummy.
+- Pastikan setiap fase memiliki MINIMAL 2 TOPIK pembelajaran.
 
 Format JSON yang harus dikembalikan:
 {
@@ -207,8 +211,13 @@ ATURAN PENTING:
 7. ATURAN RESOURCE (SANGAT PENTING):
    - DOCUMENTATION: Link resmi valid.
    - VIDEO: Gunakan URL search YouTube: https://www.youtube.com/results?search_query=[keyword]
-   - ARTICLE: Gunakan URL search Google: https://www.google.com/search?q=[keyword]
-   - DILARANG KERAS menggunakan link dummy/placeholder seperti 'youtube.com/watch?v=example' atau 'example.com'. Gunakan pola pencarian di atas jika ragu.
+   - ARTICLE: Gunakan format search Google spesifik sesuai topik. Gunakan KEYWORD DALAM BAHASA INGGRIS pada query pencarian:
+     * Dasar (HTML/CSS/JS/PHP/SQL/Git): site:w3schools.com
+     * Laravel/Framework: site:petanikode.com atau site:malasngoding.com
+     * Lanjutan/English: site:freecodecamp.org atau site:dev.to
+     * URL: https://www.google.com/search?q=[English+Keyword]+site:[domain]
+   - DILARANG KERAS menggunakan link dummy/placeholder. Gunakan pola pencarian di atas jika ragu.
+   - Setiap fase baru WAJIB memiliki MINIMAL 2 TOPIK.
 
 Format JSON yang harus dikembalikan:
 {
