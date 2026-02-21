@@ -127,7 +127,7 @@ class AiFeedbackController extends Controller
             ], 404);
         }
 
-        $feedbacks = AiFeedback::with("user")->where("roadmap_id", $id)->get();
+        $feedbacks = AiFeedback::with("user")->where("roadmap_id", $id)->latest()->get();
 
         if ($feedbacks->isEmpty()) {
             return response()->json([

@@ -27,6 +27,7 @@ Route::middleware("auth:sanctum")->group(function () {
     Route::get("/roadmaps", [RoadmapController::class, "index"]);
     Route::get("/roadmaps/{id}", [RoadmapController::class, "show"]);
     Route::delete("/roadmaps/{id}", [RoadmapController::class, "destroy"]);
+    Route::put("/roadmaps/{id}/evaluate", [RoadmapController::class, "update"]);
 
     //update progress
     Route::patch("/topics/{id}/toggle", [RoadmapTopicController::class, "update"]);

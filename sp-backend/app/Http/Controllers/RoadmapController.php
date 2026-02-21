@@ -31,13 +31,13 @@ class RoadmapController extends Controller
 
         return response()->json([
             "success" => true,
-            "data" => $roadmaps->map(function($roadmap){
-                return[
-                    "id"=>$roadmap->id,
-                    "title"=>$roadmap->title,
-                    "hours_per_day"=>$roadmap->hours_per_day,
-                    "status"=>$roadmap->status,
-                    "skill"=>$roadmap->skill->name
+            "data" => $roadmaps->map(function ($roadmap) {
+                return [
+                    "id" => $roadmap->id,
+                    "title" => $roadmap->title,
+                    "hours_per_day" => $roadmap->hours_per_day,
+                    "status" => $roadmap->status,
+                    "skill" => $roadmap->skill->name
                 ];
             })
         ]);
@@ -189,7 +189,7 @@ class RoadmapController extends Controller
         $totalTopics     = $roadmap->roadmapPhases->sum(fn($phase) => $phase->roadmapTopics->count());
         $completedTopics = $roadmap->roadmapPhases->sum(fn($phase) => $phase->roadmapTopics->where('is_completed', 1)->count());
 
-        $progressPersen = $totalTopics > 0
+        $progressPercent = $totalTopics > 0
             ? round(($completedTopics / $totalTopics) * 100, 1)
             : 0;
 
@@ -199,7 +199,7 @@ class RoadmapController extends Controller
                 "id" => $roadmap->id,
                 "title" => $roadmap->title,
                 "status" => $roadmap->status,
-                "progress_persen" => $progressPersen,
+                "progress_persen" => $progressPercent,
                 "target_deadline" => $roadmap->target_deadline,
                 "skill" => $roadmap->skill,
                 "phases" => $roadmap->roadmapPhases->map(function ($phase) {
@@ -231,11 +231,190 @@ class RoadmapController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * Evaluate and restructure roadmap via AI.
      */
-    public function update(Request $request, Roadmap $roadmap)
+    public function update(Request $request, $id)
     {
-        //
+        // 1. Validasi — minimal satu field harus diisi
+        $validated = $request->validate([
+            'hours_per_day'      => 'nullable|numeric|min:0.5|max:12',
+            'target_deadline'    => 'nullable|date|after_or_equal:today',
+            'catatan_perubahan'  => 'nullable|string|max:500',
+        ]);
+
+        if (empty($validated['hours_per_day']) && empty($validated['target_deadline']) && empty($validated['catatan_perubahan'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Minimal satu field harus diisi (hours_per_day, target_deadline, atau catatan_perubahan).',
+            ], 422);
+        }
+
+        // 2. Ambil roadmap + relasi & cek ownership
+        $roadmap = Roadmap::with(['skill', 'roadmapPhases.roadmapTopics.topicResources'])->find($id);
+
+        if (!$roadmap) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Roadmap not found',
+            ], 404);
+        }
+
+        if ($roadmap->user_id !== Auth::id()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Forbidden Access',
+            ], 403);
+        }
+
+        // 3. Siapkan data current state untuk AI
+        $totalTopics = 0;
+        $completedTopics = 0;
+        $currentPhases = [];
+
+        foreach ($roadmap->roadmapPhases as $phase) {
+            $topics = [];
+            foreach ($phase->roadmapTopics as $topic) {
+                $totalTopics++;
+                if ($topic->is_completed) $completedTopics++;
+
+                $topics[] = [
+                    'topic_title'  => $topic->topic_title,
+                    'is_completed' => (bool) $topic->is_completed,
+                ];
+            }
+
+            $currentPhases[] = [
+                'phase_title' => $phase->phase_title,
+                'order'       => $phase->order,
+                'topics'      => $topics,
+            ];
+        }
+
+        $progressPersen = $totalTopics > 0
+            ? round(($completedTopics / $totalTopics) * 100, 1)
+            : 0;
+
+        $data = [
+            'skill_name'          => $roadmap->skill->name,
+            'level'               => $roadmap->level,
+            'tujuan_akhir'        => $roadmap->tujuan_akhir,
+            'old_hours_per_day'   => $roadmap->hours_per_day,
+            'old_target_deadline' => $roadmap->target_deadline,
+            'total_topics'        => $totalTopics,
+            'completed_topics'    => $completedTopics,
+            'progress_persen'     => $progressPersen,
+            'current_phases'      => $currentPhases,
+            'new_hours_per_day'   => $validated['hours_per_day'] ?? null,
+            'new_target_deadline' => $validated['target_deadline'] ?? null,
+            'catatan_perubahan'   => $validated['catatan_perubahan'] ?? null,
+        ];
+
+        // 4. Panggil Gemini AI
+        try {
+            $aiResult = $this->gemini->evaluateRoadmap($data);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengevaluasi roadmap dari AI: ' . $e->getMessage(),
+            ], 500);
+        }
+
+        $completedTitles = $roadmap->roadmapPhases
+            ->flatMap(fn($phase) => $phase->roadmapTopics)
+            ->where('is_completed', true)
+            ->pluck('topic_title')
+            ->toArray();
+
+        $completedTopicsData = $roadmap->roadmapPhases
+            ->flatMap(fn($phase) => $phase->roadmapTopics)
+            ->where('is_completed', true)
+            ->mapWithKeys(fn($topic) => [
+                $topic->topic_title => $topic->topicResources->map(fn($r) => [
+                    'title' => $r->title,
+                    'url'   => $r->url,
+                    'type'  => $r->type,
+                ])->toArray()
+            ])
+            ->toArray();
+
+        // 5. Simpan perubahan dalam transaction
+        try {
+            $roadmap = DB::transaction(function () use ($completedTitles, $completedTopicsData, $roadmap, $validated, $aiResult) {
+
+                // Update kolom roadmap jika ada perubahan
+                $updates = ['ai_raw_response' => json_encode($aiResult)];
+                if (!empty($validated['hours_per_day'])) {
+                    $updates['hours_per_day'] = $validated['hours_per_day'];
+                }
+                if (!empty($validated['target_deadline'])) {
+                    $updates['target_deadline'] = $validated['target_deadline'];
+                }
+                if (!empty($aiResult['ringkasan'])) {
+                    $updates['description'] = $aiResult['ringkasan'];
+                }
+                $roadmap->update($updates);
+
+                // Hapus semua phases lama (topics + resources ikut terhapus via cascade)
+                $roadmap->roadmapPhases()->delete();
+
+                // Insert phases/topics/resources baru dari AI
+                foreach ($aiResult['phases'] as $phaseData) {
+                    $phase = RoadmapPhase::create([
+                        'roadmap_id'           => $roadmap->id,
+                        'phase_title'          => $phaseData['phase_title'],
+                        'phase_description'    => $phaseData['phase_description'] ?? $phaseData['phase_title'],
+                        'order'                => $phaseData['order'],
+                        'durasi_estimasi_hari' => $phaseData['durasi_estimasi_hari'],
+                    ]);
+
+                    foreach ($phaseData['topics'] as $topicData) {
+                        $isCompleted = in_array($topicData['topic_title'], $completedTitles);
+
+                        $topic = RoadmapTopic::create([
+                            'roadmap_phase_id' => $phase->id,
+                            'topic_title'      => $topicData['topic_title'],
+                            'description'      => $topicData['description'] ?? '',
+                            'order'            => $topicData['order'],
+                            'is_completed'     => $isCompleted,
+                            'completed_at'     => $isCompleted ? now() : null,
+                        ]);
+
+                        if ($isCompleted && isset($completedTopicsData[$topicData['topic_title']])) {
+                            $resources = $completedTopicsData[$topicData['topic_title']];
+                        } else {
+                            $resources = $topicData['resources'] ?? [];
+                        }
+
+                        foreach ($resources as $resourceData) {
+                            TopicResource::create([
+                                'roadmap_topic_id' => $topic->id,
+                                'title'            => $resourceData['title'],
+                                'url'              => $resourceData['url'],
+                                'type'             => in_array($resourceData['type'], ['video', 'article', 'course', 'documentation'])
+                                    ? $resourceData['type']
+                                    : 'article',
+                            ]);
+                        }
+                    }
+                }
+
+                return $roadmap;
+            });
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menyimpan perubahan ke database: ' . $e->getMessage(),
+            ], 500);
+        }
+
+        // 6. Return response
+        $roadmap->load(['skill', 'roadmapPhases.roadmapTopics.topicResources']);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Roadmap berhasil dievaluasi dan disesuaikan!',
+            'data'    => $roadmap,
+        ]);
     }
 
     /**
