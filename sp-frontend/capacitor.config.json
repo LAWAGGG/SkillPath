@@ -1,5 +1,8 @@
 {
   "appId": "com.example.app",
   "appName": "SkillPath",
-  "webDir": "dist"
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "http"
+  }
 }
