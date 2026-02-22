@@ -39,7 +39,7 @@ class User extends Authenticatable
     }
 
     public function roadmaps(){
-        return $this->hasMany(Roadmap::class)->orderBy("created_at", "DESC");
+        return $this->hasMany(Roadmap::class, "user_id")->orderBy("created_at", "DESC");
     }
 
     public function aiFeedbacks(){

@@ -13,7 +13,7 @@ class SkillController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Skill::with("category");
+        $query = Skill::with("category")->where("is_active", 1);
 
         if ($request->category) {
             $query->whereHas("category", function ($cat) use ($request) {
@@ -29,7 +29,53 @@ class SkillController extends Controller
 
         return response()->json([
             "success" => true,
-            "data" => $skills
+            "data" => $skills->map(function ($skill) {
+                return [
+                    "id" => $skill->id,
+                    "name" => $skill->name,
+                    "slug" => $skill->slug,
+                    "description" => $skill->description,
+                    "is_active" => $skill->is_active,
+                    "category" => $skill->category->name,
+                ];
+            })
+        ]);
+    }
+
+    function adminSkills(Request $request)
+    {
+        $query = Skill::with("category")->withCount("roadmaps")->orderBy("roadmaps_count", "desc");
+
+        if ($request->has("is_active")) {
+            $query->where("is_active", $request->is_active);
+        }
+
+        if ($request->category) {
+            $query->whereHas("category", function ($cat) use ($request) {
+                $cat->where("slug", "LIKE", "%{$request->category}%");
+            });
+        }
+
+        if ($request->search) {
+            $query->where("slug", "LIKE", "%{$request->search}%");
+        }
+
+        $skills = $query->get();
+
+        return response()->json([
+            "success" => true,
+            "data" => $skills->map(function ($skill) {
+                return [
+                    "id" => $skill->id,
+                    "name" => $skill->name,
+                    "slug" => $skill->slug,
+                    "description" => $skill->description,
+                    "is_active" => $skill->is_active,
+                    "category" => $skill->category->name,
+                    "roadmaps_used" => $skill->roadmaps_count,
+                    "skill_category_id" => $skill->skill_category_id,
+                ];
+            })
         ]);
     }
 
@@ -39,13 +85,23 @@ class SkillController extends Controller
     public function recommendation()
     {
         $skills = Skill::withCount('roadmaps')
+            ->where("is_active", 1)
             ->orderBy('roadmaps_count', 'desc')
             ->limit(5)
             ->get();
 
         return response()->json([
             "success" => true,
-            "data" => $skills
+            "data" => $skills->map(function ($skill) {
+                return [
+                    "id" => $skill->id,
+                    "name" => $skill->name,
+                    "slug" => $skill->slug,
+                    "description" => $skill->description,
+                    "is_active" => $skill->is_active,
+                    "category" => $skill->category->name,
+                ];
+            })
         ]);
     }
 
@@ -102,11 +158,11 @@ class SkillController extends Controller
         }
 
         $request->validate([
-            "skill_category_id" => "required|exists:skill_categories,id",
-            "name" => "required",
-            "slug" => "required",
-            "description" => "required",
-            "is_active" => "required|boolean",
+            "skill_category_id" => "exists:skill_categories,id",
+            "name" => "string",
+            "slug" => "string",
+            "description" => "string",
+            "is_active" => "boolean",
         ]);
 
         $skill->update($request->all());

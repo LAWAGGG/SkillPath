@@ -12,11 +12,18 @@ class SkillCategoryController extends Controller
      */
     public function index()
     {
-        $categories = SkillCategory::all();
+        $categories = SkillCategory::with("skills")->withCount("skills")->get();
 
         return response()->json([
             "success" => true,
-            "data" => $categories
+            "data" => $categories->map(function ($cat) {
+                return[
+                    "id"=>$cat->id,
+                    "name"=>$cat->name,
+                    "slug"=>$cat->slug,
+                    "skills_count"=>$cat->skills_count,
+                ];
+            })
         ]);
     }
 

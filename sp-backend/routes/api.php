@@ -42,6 +42,7 @@ Route::middleware("auth:sanctum")->group(function () {
     //admin features
     Route::middleware([AdminMiddleware::class])->group(function () {
         Route::prefix('/admin')->group(function () {
+            Route::get('/dashboard', [UserController::class, "adminDashboard"]);
             //skill categories
             Route::get("/skill-categories", [SkillCategoryController::class, "index"]);
             Route::post("/skill-categories", [SkillCategoryController::class, "store"]);
@@ -49,7 +50,7 @@ Route::middleware("auth:sanctum")->group(function () {
             Route::delete("/skill-categories/{id}", [SkillCategoryController::class, "destroy"]);
 
             //skill
-            Route::get("/skills", [SkillController::class, "index"]);
+            Route::get("/skills", [SkillController::class, "adminSkills"]);
             Route::post('/skills', [SkillController::class, "store"]);
             Route::put('/skills/{id}', [SkillController::class, "update"]);
             Route::delete('/skills/{id}', [SkillController::class, "destroy"]);

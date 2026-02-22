@@ -41,11 +41,11 @@ class RoadmapController extends Controller
                     "hours_per_day" => $roadmap->hours_per_day,
                     "status" => $roadmap->status,
                     "skill" => $roadmap->skill->name,
-                    "days_left"=>round(Carbon::parse(now())->diffInDays($roadmap->target_deadline, false)) . " days left",
-                    "completed_topics_count"=>$roadmap->roadmapPhases->sum(function($phase){
+                    "days_left" => round(Carbon::parse(now())->diffInDays($roadmap->target_deadline, false)) . " days left",
+                    "completed_topics_count" => $roadmap->roadmapPhases->sum(function ($phase) {
                         return $phase->roadmapTopics->where("is_completed", 1)->count();
                     }),
-                    "total_topics"=>$roadmap->roadmapPhases->sum(function($phase){
+                    "total_topics" => $roadmap->roadmapPhases->sum(function ($phase) {
                         return $phase->roadmapTopics->count();
                     }),
                 ];
@@ -55,11 +55,30 @@ class RoadmapController extends Controller
 
     public function adminRoadmaps()
     {
-        $roadmaps = Roadmap::latest()->get();
+        $roadmaps = Roadmap::with("user", "skill", "roadmapPhases.roadmapTopics")->latest()->get();
 
         return response()->json([
             "success" => true,
-            "data" => $roadmaps
+            "data" => $roadmaps->map(function ($roadmap) {
+                return [
+                    "id" => $roadmap->id,
+                    "title" => $roadmap->title,
+                    "hours_per_day" => $roadmap->hours_per_day,
+                    "status" => $roadmap->status,
+                    "skill" => $roadmap->skill->name,
+                    "days_left" => round(Carbon::parse(now())->diffInDays($roadmap->target_deadline, false)) . " days left",
+                    "total_completed_topics" => $roadmap->roadmapPhases->sum(function ($phase) {
+                        return $phase->roadmapTopics->where("is_completed", 1)->count();
+                    }) . "/" . $roadmap->roadmapPhases->sum(function ($phase) {
+                        return $phase->roadmapTopics->count();
+                    }),
+                    "created_at"=>$roadmap->created_at->format("Y-m-d H:i:s"),
+                    "user"=>[
+                        "id"=>$roadmap->user->id,
+                        "name"=>$roadmap->user->name,
+                    ]
+                ];
+            })
         ]);
     }
 
@@ -189,7 +208,7 @@ class RoadmapController extends Controller
             ], 404);
         }
 
-        if ($roadmap->user_id !== $user->id) {
+        if ($roadmap->user_id !== $user->id && $user->role != "admin") {
             return response()->json([
                 "success" => false,
                 "message" => "Forbidden Access"
@@ -213,14 +232,14 @@ class RoadmapController extends Controller
                 "progress_pecent" => $progressPercent,
                 "target_deadline" => $roadmap->target_deadline,
                 "skill" => $roadmap->skill,
-                "days_left"=>round(Carbon::parse(now())->diffInDays($roadmap->target_deadline, false)) . " days left",
+                "days_left" => round(Carbon::parse(now())->diffInDays($roadmap->target_deadline, false)) . " days left",
                 "phases" => $roadmap->roadmapPhases->map(function ($phase) {
                     return [
                         "id" => $phase->id,
                         "phase_title" => $phase->phase_title,
                         "order" => $phase->order,
                         "durasi_estimasi_hari" => $phase->durasi_estimasi_hari,
-                        "completed_topic"=>$phase->roadmapTopics->where("is_completed", 1)->count()/$phase->roadmapTopics->count(),
+                        "completed_topic" => $phase->roadmapTopics->where("is_completed", 1)->count() / $phase->roadmapTopics->count(),
                         "topics" => $phase->roadmapTopics->map(function ($topic) {
                             return [
                                 "id" => $topic->id,
