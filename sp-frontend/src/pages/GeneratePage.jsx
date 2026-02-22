@@ -71,7 +71,7 @@ export default function GeneratePage() {
       {/* Mobile Container */}
       <div className="relative mx-auto flex h-full min-h-screen w-full max-w-md flex-col overflow-x-hidden bg-background-light dark:bg-background-dark bg-dots dot-pattern shadow-2xl">
         {/* Header */}
-        <header className="sticky top-0 z-40 bg-white/60 dark:bg-background-dark/60 px-4 py-4 backdrop-blur-lg border-b border-slate-200/50 dark:border-white/5">
+        <header className="sticky top-0 z-40 light:bg-white/60 dark:bg-background-dark/60 px-4 py-4 backdrop-blur-lg border-b border-slate-200/50 dark:border-white/5">
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate('/dashboard')}
@@ -222,7 +222,7 @@ export default function GeneratePage() {
                 {/* Goals */}
                 <div className="space-y-2">
                   <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">
-                    Your Ultimate Goal
+                    Your Goal
                   </label>
                   <textarea
                     required

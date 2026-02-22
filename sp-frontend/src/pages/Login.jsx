@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../api/api";
-import { setToken } from "../utils/uttils";
+import { setRole, setToken } from "../utils/uttils";
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
@@ -20,7 +20,12 @@ export default function Login() {
       })
       .then((res) => {
         setToken(res.data.token);
-        navigate("/dashboard");
+        setRole(res.data.user.role)
+        if(res.data.user.role == "user"){
+          navigate("/dashboard");
+        } else {
+          navigate("/admin/dashboard")
+        }
       })
       .catch((error) => {
         setErrorMessage(error.response.data.message);
@@ -29,8 +34,6 @@ export default function Login() {
         }
       });
   }
-
-  console.log(errors);
 
   return (
     <div className="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen relative overflow-hidden">

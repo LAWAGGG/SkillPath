@@ -33,7 +33,7 @@ export default function Roadmaps() {
         <header className="sticky top-0 z-50 flex items-center justify-between gap-4 light:bg-white/60 dark:bg-background-dark/60 px-4 py-4 backdrop-blur-lg border-b border-slate-200/50 dark:border-white/5">
           <div className="flex items-center gap-3">
             <button
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate("/dashboard")}
               className="flex h-10 w-10 items-center justify-center rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-200/50 dark:border-white/5 text-slate-600 dark:text-slate-300 active:scale-90 transition-transform"
             >
               <span className="material-symbols-outlined">arrow_back</span>
@@ -83,7 +83,13 @@ export default function Roadmaps() {
                           </p>
                         </div>
                       </div>
-                      <div className="rounded-full bg-green-100 dark:bg-green-900/40 px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest text-green-700 dark:text-green-400 border border-green-200/50 dark:border-green-400/20">
+                      <div
+                        className={`rounded-full px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest border ${
+                          item.status === "active"
+                            ? "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 border-amber-200/50 dark:border-amber-400/20"
+                            : "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 border-green-200/50 dark:border-green-400/20"
+                        }`}
+                      >
                         {item.status}
                       </div>
                     </div>

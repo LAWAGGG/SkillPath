@@ -12,3 +12,10 @@ export function removeToken(){
     localStorage.removeItem("token")
 }
 
+export function getRole(){
+    return localStorage.getItem("role")
+}
+
+export function setRole(role){
+    localStorage.setItem("role", role)
+}

@@ -96,7 +96,7 @@ export default function Profile() {
             <div className="pt-4">
               <button
                 onClick={handleLogout}
-                className="flex w-full items-center justify-center gap-2 p-4 rounded-2xl bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-500/20 font-black text-sm active:scale-95 transition-all shadow-sm shadow-red-500/5"
+                className="flex w-full items-center justify-center gap-2 p-4 rounded-2xl bg-red-200 dark:bg-red-500/10 text-red-600 dark:text-red-400 border border-red-400 dark:border-red-500/20 font-black text-sm active:scale-95 transition-all shadow-sm shadow-red-500/5"
               >
                 <span className="material-symbols-outlined text-[20px]">
                   logout

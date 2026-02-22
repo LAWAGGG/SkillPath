@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../api/api";
-import { setToken } from "../utils/uttils";
+import { setRole, setToken } from "../utils/uttils";
 
 export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
@@ -24,7 +24,12 @@ export default function Register() {
       })
       .then((res) => {
         setToken(res.data.token);
-        navigate("/dashboard");
+        setRole(res.data.user.role)
+        if (res.data.user.role == "user") {
+          navigate("/dashboard");
+        } else {
+          navigate("/admin/dashboard")
+        }
       })
       .catch((error) => {
         setErrorMessage(error.response?.data?.message || "An error occurred");
@@ -98,7 +103,6 @@ export default function Register() {
                   className="block w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-base"
                   id="name"
                   placeholder="Enter your full name"
-                  required
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -127,7 +131,6 @@ export default function Register() {
                   className="block w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-base"
                   id="email"
                   placeholder="Enter your email"
-                  required
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -156,7 +159,6 @@ export default function Register() {
                   className="block w-full pl-11 pr-12 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-base"
                   id="password"
                   placeholder="••••••••"
-                  required
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -196,7 +198,6 @@ export default function Register() {
                   className="block w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-base"
                   id="password_confirmation"
                   placeholder="••••••••"
-                  required
                   type={showPassword ? "text" : "password"}
                   value={passwordConfirmation}
                   onChange={(e) => setPasswordConfirmation(e.target.value)}

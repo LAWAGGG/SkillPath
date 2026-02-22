@@ -9,6 +9,7 @@ export default function RoadmapDetail() {
   const [roadmap, setRoadmap] = useState({});
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [confettiFired, setConfettiFired] = useState(false);
 
   // Evaluation States
   const [showEvaluateModal, setShowEvaluateModal] = useState(false);
@@ -130,6 +131,20 @@ export default function RoadmapDetail() {
     }
     return () => clearInterval(interval);
   }, [isEvaluating]);
+
+  useEffect(() => {
+    if (Math.round(roadmap.progress_pecent) === 100 && !confettiFired) {
+      window.confetti({
+        particleCount: 150,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ["#6366f1", "#a855f7", "#ec4899"],
+      });
+      setConfettiFired(true);
+    } else if (Math.round(roadmap.progress_pecent) < 100) {
+      setConfettiFired(false);
+    }
+  }, [roadmap.progress_pecent, confettiFired]);
 
   return (
     <div className="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen relative overflow-hidden">
@@ -327,6 +342,40 @@ export default function RoadmapDetail() {
               </div>
             );
           })}
+
+          {/* Celebration & Feedback Button */}
+          {Math.round(roadmap.progress_pecent) === 100 && (
+            <div className="pt-4 animate-in fade-in slide-in-from-bottom duration-700">
+              <div className="bg-gradient-to-br from-primary to-purple-600 rounded-3xl p-6 text-white shadow-xl shadow-primary/20 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 -mr-4 -mt-4 h-24 w-24 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
+                <div className="absolute bottom-0 left-0 -ml-4 -mb-4 h-20 w-20 bg-black/10 rounded-full blur-xl"></div>
+
+                <div className="relative z-10 flex flex-col items-center text-center">
+                  <div className="h-16 w-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center mb-4 border border-white/30 rotate-3 animate-bounce">
+                    <span className="material-symbols-outlined text-3xl font-bold">
+                      emoji_events
+                    </span>
+                  </div>
+                  <h2 className="text-xl font-black mb-2">
+                    Incredible Achievement!
+                  </h2>
+                  <p className="text-sm text-white/80 font-medium mb-6">
+                    You've mastered every topic in this path. The world of{" "}
+                    {roadmap.skill?.name} is now yours to conquer.
+                  </p>
+                  <button
+                    onClick={() => navigate(`/roadmap/${params.id}/feedback`)}
+                    className="w-full py-4 bg-white text-primary rounded-2xl font-black text-sm shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2"
+                  >
+                    <span className="material-symbols-outlined text-[20px]">
+                      auto_awesome
+                    </span>
+                    Give Me Feedback
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </main>
         <BottomBar />
 

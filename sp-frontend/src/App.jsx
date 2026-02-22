@@ -2,7 +2,7 @@ import { useState } from "react";
 import reactLogo from "./assets/react.svg";
 import viteLogo from "/vite.svg";
 import "./App.css";
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
@@ -11,20 +11,49 @@ import GeneratePage from "./pages/GeneratePage";
 import RoadmapDetail from "./pages/RoadmapDetail";
 import Feedback from "./pages/Feedback";
 import AdminDashboard from "./pages/admin/AdminDashboard";
-import CategoryManage from "./pages/admin/CategoryManage";
 import SkillManage from "./pages/admin/SkillManage";
 import UserManage from "./pages/admin/UserManage";
+import RoadmapManage from "./pages/admin/RoadmapManage";
+import AdminProfile from "./pages/admin/AdminProfile";
 import Roadmaps from "./pages/Roadmaps";
 import Profile from "./pages/Profile";
 import FeedbackPage from "./pages/FeedbackPage";
+import { getRole, getToken } from "./utils/uttils";
 
 function App() {
+  function RedirectRoute({ children }) {
+    const token = getToken();
+    const role = getRole();
+
+    if (token) {
+      if (role == "user") return <Navigate to="/dashboard" replace></Navigate>;
+      if (role == "admin")
+        return <Navigate to="/admin/dashboard" replace></Navigate>;
+    }
+
+    return children;
+  }
+
   return (
     <>
       <Routes>
         {/* user */}
-        <Route path="/" element={<Login></Login>}></Route>
-        <Route path="/register" element={<Register></Register>}></Route>
+        <Route
+          path="/"
+          element={
+            <RedirectRoute>
+              <Login />
+            </RedirectRoute>
+          }
+        ></Route>
+        <Route
+          path="/register"
+          element={
+            <RedirectRoute>
+              <Register />
+            </RedirectRoute>
+          }
+        ></Route>
         <Route path="/dashboard" element={<Dashboard></Dashboard>}></Route>
         <Route path="/search" element={<Search></Search>}></Route>
         <Route path="/roadmaps" element={<Roadmaps></Roadmaps>}></Route>
@@ -53,14 +82,18 @@ function App() {
           element={<AdminDashboard></AdminDashboard>}
         ></Route>
         <Route
-          path="/admin/category"
-          element={<CategoryManage></CategoryManage>}
+          path="/admin/roadmaps"
+          element={<RoadmapManage></RoadmapManage>}
         ></Route>
         <Route
           path="/admin/skill"
           element={<SkillManage></SkillManage>}
         ></Route>
-        <Route path="/admin/user" element={<UserManage></UserManage>}></Route>
+        <Route path="/admin/users" element={<UserManage></UserManage>}></Route>
+        <Route
+          path="/admin/profile"
+          element={<AdminProfile></AdminProfile>}
+        ></Route>
       </Routes>
     </>
   );

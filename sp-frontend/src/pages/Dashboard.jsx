@@ -205,7 +205,13 @@ export default function Dashboard() {
                       </p>
                     </div>
                   </div>
-                  <div className="rounded-full bg-green-100 dark:bg-green-900/40 px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest text-green-700 dark:text-green-400 border border-green-200/50 dark:border-green-400/20">
+                  <div
+                    className={`rounded-full px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest border ${
+                      item.status === "active"
+                        ? "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 border-amber-200/50 dark:border-amber-400/20"
+                        : "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 border-green-200/50 dark:border-green-400/20"
+                    }`}
+                  >
                     {item.status}
                   </div>
                 </div>
@@ -235,7 +241,10 @@ export default function Dashboard() {
                     ></div>
                   </div>
                 </div>
-                <button className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-primary/20 transition-all hover:bg-primary-dark hover:shadow-primary/30 active:scale-[0.97]">
+                <button
+                  onClick={() => navigate(`/roadmap/${item.id}`)}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-primary/20 transition-all hover:bg-primary-dark hover:shadow-primary/30 active:scale-[0.97]"
+                >
                   Continue Learning
                   <span className="material-symbols-outlined text-[18px]">
                     arrow_forward
