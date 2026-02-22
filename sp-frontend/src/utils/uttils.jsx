@@ -1,4 +1,5 @@
-export const BASE_URL = "http://localhost:8000/api"
+// export const BASE_URL = "http://localhost:8000/api"
+export const BASE_URL = "http://192.168.100.147:8080/api"
 
 export function setToken(token){
     localStorage.setItem("token", token)
