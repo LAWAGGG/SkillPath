@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  # PHP App
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: skillpath-app
+    container_name: skillpath-app
+    restart: unless-stopped
+    working_dir: /var/www
+    env_file:
+      - .env.docker
+    volumes:
+      - .:/var/www
+    depends_on:
+      - db
+      - redis
+    networks:
+      - skillpath-network
+
+  # Nginx
+  webserver:
+    image: nginx:alpine
+    container_name: skillpath-webserver
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/var/www
+      - ./docker/nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - app
+    networks:
+      - skillpath-network
+
+  # MySQL
+  db:
+    image: mysql:8.0
+    container_name: skillpath-db
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: laravel_skillpath
+      MYSQL_USER: faqih
+      MYSQL_PASSWORD: "1243"
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    volumes:
+      - dbdata:/var/lib/mysql
+    networks:
+      - skillpath-network
+
+  # Redis
+  redis:
+    image: redis:alpine
+    container_name: skillpath-redis
+    restart: unless-stopped
+    networks:
+      - skillpath-network
+
+networks:
+  skillpath-network:
+    driver: bridge
+
+volumes:
+  dbdata:
+    driver: local

@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\AiFeedbackController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\QuizzController;
+use App\Http\Controllers\QuizzQuestionController;
 use App\Http\Controllers\SkillController;
 use App\Http\Controllers\RoadmapController;
 use App\Http\Controllers\RoadmapTopicController;
@@ -38,6 +40,13 @@ Route::middleware("auth:sanctum")->group(function () {
     //ai feedback
     Route::post('/ai/feedback/{roadmapId}', [AiFeedbackController::class, "store"]);
     Route::get('/ai/feedbacks/{roadmapId}', [AiFeedbackController::class, "show"]);
+
+    //question ai
+    Route::post("/phases/{id}/quiz", [QuizzController::class, "store"]);
+    Route::get("/quizzes/{id}", [QuizzController::class, "show"]);
+    Route::post("/quizzes/{id}/submit", [QuizzController::class, "submit"]);
+    Route::get("/quizzes/{id}/result", [QuizzController::class, "showResult"]);
+    // Route::post("/quizzes/{id}/question/{questionId}/answer", [QuizzQuestionController::class, "answerQuestion"]);
 
     //admin features
     Route::middleware([AdminMiddleware::class])->group(function () {

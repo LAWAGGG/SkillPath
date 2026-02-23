@@ -46,61 +46,13 @@ class AiFeedbackController extends Controller
             ], 403);
         }
 
-        $totalTopics     = 0;
-        $completedTopics = 0;
-        $breakdownPerFase = [];
-
-        foreach ($roadmap->roadmapPhases as $phase) {
-            $total = $phase->roadmapTopics->count();
-            $completed = $phase->roadmapTopics->where('is_completed', 1)->count();
-
-            $totalTopics     += $total;
-            $completedTopics += $completed;
-
-            $breakdownPerFase[] = [
-                "phase_title" => $phase->phase_title,
-                "completed" => $completed,
-                "total" => $total,
-            ];
-        }
-
-        $data = [
-            'skill_name'         => $roadmap->skill->name,
-            'total_topics'       => $totalTopics,
-            'completed_topics'   => $completedTopics,
-            'progress_persen'    => $totalTopics > 0 ? round(($completedTopics / $totalTopics) * 100, 1) : 0,
-            'sisa_hari'          => now()->diffInDays($roadmap->target_deadline, false),
-            'jam_per_hari'       => $roadmap->hours_per_day,
-            'breakdown_per_fase' => $breakdownPerFase,
-        ];
-
+        // 3. Generate & Simpan via Service
         try {
-            $aiResult = $this->gemini->generateFeedback($data);
+            $feedback = $this->gemini->handleFeedbackGeneration($roadmap);
         } catch (\Exception $e) {
             return response()->json([
                 "success" => false,
-                'message' => 'Gagal generate roadmap dari AI: ' . $e->getMessage(),
-            ], 500);
-        }
-
-        try {
-            $feedback = DB::transaction(function () use ($roadmap, $aiResult, $data) {
-                return AiFeedback::create([
-                    'user_id'                  => Auth::id(),
-                    'roadmap_id'               => $roadmap->id,
-                    'score_progress'           => $aiResult['skor_progress'],
-                    'apresiasi'                => $aiResult['apresiasi'],
-                    'analisis'                 => $aiResult['analisis'],
-                    'saran_konkret'            => $aiResult['saran_konkret'],
-                    'pesan_motivasi'           => $aiResult['pesan_motivasi'],
-                    'perlu_penyesuaian_jadwal' => $aiResult['perlu_penyesuaian_jadwal'],
-                    'progress_saat_request'    => $data['progress_persen'],
-                ]);
-            });
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal menyimpan roadmap ke database: ' . $e->getMessage(),
+                'message' => 'Gagal generate feedback: ' . $e->getMessage(),
             ], 500);
         }
 
