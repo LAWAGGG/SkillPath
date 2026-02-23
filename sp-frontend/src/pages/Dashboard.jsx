@@ -5,7 +5,16 @@ import api from "../api/api";
 
 export default function Dashboard() {
   const [dashboardItem, setDashboardItem] = useState({});
+  const currentDate = new Date()
+  const currentHour = currentDate.getHours()
+  const [timeOfDay, setTimeOfDay] = useState("")
   const navigate = useNavigate();
+
+  function setTime() {
+    if (currentHour < 12) setTimeOfDay("Morning")
+    else if (currentHour < 18) setTimeOfDay("Afternoon")
+    else setTimeOfDay("Night")
+  }
 
   async function fetchDashboard() {
     api.get("user/dashboard").then((res) => {
@@ -15,6 +24,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchDashboard();
+    setTime()
   }, []);
   return (
     <div className="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen relative overflow-hidden">
@@ -48,7 +58,7 @@ export default function Dashboard() {
           {/* Greeting Section */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
-              Selamat pagi, {dashboardItem.user_name}!
+              Good {timeOfDay}, {dashboardItem.user_name}!
             </h1>
             <p className="mt-1 text-base text-slate-500 dark:text-slate-400">
               Ready to learn something new today?
@@ -206,11 +216,10 @@ export default function Dashboard() {
                     </div>
                   </div>
                   <div
-                    className={`rounded-full px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest border ${
-                      item.status === "active"
+                    className={`rounded-full px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest border ${item.status === "active"
                         ? "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 border-amber-200/50 dark:border-amber-400/20"
                         : "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 border-green-200/50 dark:border-green-400/20"
-                    }`}
+                      }`}
                   >
                     {item.status}
                   </div>
@@ -230,12 +239,11 @@ export default function Dashboard() {
                   <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-white/5 shadow-inner">
                     <div
                       style={{
-                        width: `${
-                          Math.round(
-                            (item.completed_topics_count / item.total_topics) *
-                              100,
-                          ) || 0
-                        }%`,
+                        width: `${Math.round(
+                          (item.completed_topics_count / item.total_topics) *
+                          100,
+                        ) || 0
+                          }%`,
                       }}
                       className="h-full rounded-full bg-gradient-to-r from-primary to-primary-dark transition-all duration-700 ease-out shadow-lg"
                     ></div>

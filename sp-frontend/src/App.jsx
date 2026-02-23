@@ -18,6 +18,8 @@ import AdminProfile from "./pages/admin/AdminProfile";
 import Roadmaps from "./pages/Roadmaps";
 import Profile from "./pages/Profile";
 import FeedbackPage from "./pages/FeedbackPage";
+import Quiz from "./pages/Quiz";
+import QuizResult from "./pages/QuizResult";
 import { getRole, getToken } from "./utils/uttils";
 
 function App() {
@@ -75,6 +77,11 @@ function App() {
           element={<RoadmapDetail></RoadmapDetail>}
         ></Route>
         <Route path="/feedback" element={<Feedback></Feedback>}></Route>
+        <Route path="/quiz/:phase_id" element={<Quiz></Quiz>}></Route>
+        <Route
+          path="/quiz/:phase_id/result"
+          element={<QuizResult></QuizResult>}
+        ></Route>
 
         {/* admin */}
         <Route

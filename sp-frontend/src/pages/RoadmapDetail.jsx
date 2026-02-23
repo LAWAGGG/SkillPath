@@ -15,6 +15,7 @@ export default function RoadmapDetail() {
   const [showEvaluateModal, setShowEvaluateModal] = useState(false);
   const [isEvaluating, setIsEvaluating] = useState(false);
   const [isGeneratingFeedback, setIsGeneratingFeedback] = useState(false);
+  const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(null);
   const [evalData, setEvalData] = useState({
     hours_per_day: 1,
     target_deadline: "",
@@ -93,6 +94,35 @@ export default function RoadmapDetail() {
       })
       .finally(() => {
         setIsEvaluating(false);
+      });
+  }
+
+  async function handleTestMe(phaseId) {
+    setIsGeneratingQuiz(phaseId);
+    api
+      .post(`/phases/${phaseId}/quiz`, {}, { timeout: 60000 })
+      .then((res) => {
+        if (res.data.success || res.data.data) {
+          navigate(`/quiz/${phaseId}`);
+        }
+      })
+      .catch((err) => {
+        const errData = err.response?.data;
+        if (
+          errData?.message === "Quiz untuk fase ini sudah pernah dibuat." ||
+          errData?.data
+        ) {
+          if (errData?.data?.status === "completed") {
+            navigate(`/quiz/${phaseId}/result`);
+          } else {
+            navigate(`/quiz/${phaseId}`);
+          }
+        } else {
+          alert(errData?.message || "Gagal membuka kuis. Silakan coba lagi.");
+        }
+      })
+      .finally(() => {
+        setIsGeneratingQuiz(null);
       });
   }
 
@@ -210,138 +240,168 @@ export default function RoadmapDetail() {
 
         {/* Timeline Content */}
         <main className="flex-1 overflow-y-auto pb-32 px-4 py-6 space-y-6 no-scrollbar">
-          {roadmap.phases?.map((phase, idx) => {
-            const isCompleted = phase.topics.every((t) => t.is_completed);
-            const isFirstIncomplete =
-              !isCompleted &&
-              roadmap.phases
-                .slice(0, idx)
-                .every((p) => p.topics.every((t) => t.is_completed));
-            const isLocked = !isCompleted && !isFirstIncomplete;
+          {(() => {
+            const inProgressIdx =
+              roadmap.phases?.findIndex(
+                (p) => !p.topics.every((t) => t.is_completed),
+              ) ?? -1;
+            const activeOpenIdx =
+              inProgressIdx !== -1
+                ? inProgressIdx
+                : roadmap.phases?.length
+                  ? roadmap.phases.length - 1
+                  : -1;
+            const previousOpenIdx = activeOpenIdx - 1;
 
-            return (
-              <div
-                key={phase.id}
-                className={`relative pl-4 border-l-2 ${isLocked ? "border-slate-200 dark:border-white/5" : "border-primary/30"}`}
-              >
-                {/* Timeline Dot */}
-                {isFirstIncomplete ? (
-                  <span className="absolute -left-[9px] top-0 flex h-4 w-4">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-4 w-4 bg-primary border-2 border-white dark:border-slate-900"></span>
-                  </span>
-                ) : (
-                  <div
-                    className={`absolute -left-[9px] top-0 w-4 h-4 rounded-full border-2 border-white dark:border-slate-900 ${isCompleted ? "bg-primary" : "bg-slate-200 dark:bg-slate-800"}`}
-                  ></div>
-                )}
+            return roadmap.phases?.map((phase, idx) => {
+              const isCompleted = phase.topics.every((t) => t.is_completed);
+              const isFirstIncomplete =
+                inProgressIdx !== -1 ? idx === inProgressIdx : false;
+              const isLocked = !isCompleted && !isFirstIncomplete;
+              const isOpen = idx === activeOpenIdx || idx === previousOpenIdx;
 
-                <details
-                  className={`group bg-white dark:bg-slate-950/40 rounded-xl shadow-sm border border-slate-200/60 dark:border-white/5 overflow-hidden ${isFirstIncomplete ? "ring-2 ring-primary/20 bg-primary/5 dark:bg-primary/5" : ""}`}
-                  open={isFirstIncomplete}
+              return (
+                <div
+                  key={phase.id}
+                  className={`relative pl-4 border-l-2 ${isLocked ? "border-slate-200 dark:border-white/5" : "border-primary/30"}`}
                 >
-                  <summary className="list-none cursor-pointer p-4 flex items-center justify-between outline-none">
-                    <div className="flex flex-col">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span
-                          className={`text-[10px] font-black uppercase tracking-widest ${isLocked ? "text-slate-400" : "text-primary"}`}
-                        >
-                          Phase {phase.order}
-                        </span>
-                        {isCompleted && (
-                          <span className="material-symbols-outlined text-green-500 text-sm font-bold">
-                            check_circle
-                          </span>
-                        )}
-                        {isFirstIncomplete && (
-                          <span className="bg-primary/10 text-primary px-2 py-0.5 rounded text-[10px] font-black">
-                            IN PROGRESS
-                          </span>
-                        )}
-                        {isLocked && (
-                          <span className="material-symbols-outlined text-slate-400 text-sm">
-                            lock
-                          </span>
-                        )}
-                      </div>
-                      <h3
-                        className={`font-bold text-lg leading-tight ${isLocked ? "text-slate-400" : ""}`}
-                      >
-                        {phase.phase_title}
-                      </h3>
-                    </div>
-                    <span className="material-symbols-outlined text-slate-400 transition-transform group-open:rotate-180">
-                      expand_more
+                  {/* Timeline Dot */}
+                  {isFirstIncomplete ? (
+                    <span className="absolute -left-[9px] top-0 flex h-4 w-4">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-4 w-4 bg-primary border-2 border-white dark:border-slate-900"></span>
                     </span>
-                  </summary>
+                  ) : (
+                    <div
+                      className={`absolute -left-[9px] top-0 w-4 h-4 rounded-full border-2 border-white dark:border-slate-900 ${isCompleted ? "bg-primary" : "bg-slate-200 dark:bg-slate-800"}`}
+                    ></div>
+                  )}
 
-                  <div className="px-4 pb-4 pt-0 border-t border-slate-100 dark:border-white/5 divide-y divide-slate-50 dark:divide-white/5">
-                    {phase.topics?.map((topic) => (
-                      <div
-                        key={topic.id}
-                        className={`py-4 flex gap-3 transition-colors ${topic.is_completed ? "opacity-60" : ""}`}
-                      >
-                        <div className="relative flex items-start pt-0.5">
-                          <input
-                            type="checkbox"
-                            checked={topic.is_completed}
-                            onChange={() => {
-                              !isLocked && handleCheckToggle(topic.id);
-                            }}
-                            className="peer h-5 w-5 rounded-full border-2 border-slate-300 dark:border-white/10 text-primary focus:ring-0 focus:ring-offset-0 cursor-pointer transition-all"
-                          />
-                        </div>
-                        <div className="flex-1">
-                          <p
-                            className={`text-sm font-bold leading-snug ${topic.is_completed ? "line-through text-slate-500" : "text-slate-800 dark:text-slate-200"}`}
+                  <details
+                    className={`group bg-white dark:bg-slate-950/40 rounded-xl shadow-sm border border-slate-200/60 dark:border-white/5 overflow-hidden ${isFirstIncomplete ? "ring-2 ring-primary/20 bg-primary/5 dark:bg-primary/5" : ""}`}
+                    open={isOpen}
+                  >
+                    <summary className="list-none cursor-pointer p-4 flex items-center justify-between outline-none">
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span
+                            className={`text-[10px] font-black uppercase tracking-widest ${isLocked ? "text-slate-400" : "text-primary"}`}
                           >
-                            {topic.topic_title}
-                          </p>
-                          {!topic.is_completed && topic.description && (
-                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
-                              {topic.description}
-                            </p>
+                            Phase {phase.order}
+                          </span>
+                          {isCompleted && (
+                            <span className="material-symbols-outlined text-green-500 text-sm font-bold">
+                              check_circle
+                            </span>
                           )}
-
-                          {/* Resources */}
-                          {topic.resources?.length > 0 && !isLocked && (
-                            <div className="flex flex-wrap gap-2 mt-3">
-                              {topic.resources.map((res, i) => (
-                                <a
-                                  key={i}
-                                  href={res.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tight transition-all hover:scale-105 active:scale-95 ${
-                                    res.type === "video"
-                                      ? "bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400"
-                                      : "bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400"
-                                  }`}
-                                >
-                                  <span className="material-symbols-outlined text-[14px]">
-                                    {res.type === "video"
-                                      ? "play_circle"
-                                      : res.type == "article"
-                                        ? "description"
-                                        : "article"}
-                                  </span>
-                                  {res.type === "video"
-                                    ? "Watch Video"
-                                    : res.type == "article"
-                                      ? "Article"
-                                      : "Documentation"}
-                                </a>
-                              ))}
-                            </div>
+                          {isFirstIncomplete && (
+                            <span className="bg-primary/10 text-primary px-2 py-0.5 rounded text-[10px] font-black">
+                              IN PROGRESS
+                            </span>
+                          )}
+                          {isLocked && (
+                            <span className="material-symbols-outlined text-slate-400 text-sm">
+                              lock
+                            </span>
                           )}
                         </div>
+                        <h3
+                          className={`font-bold text-lg leading-tight ${isLocked ? "text-slate-400" : ""}`}
+                        >
+                          {phase.phase_title}
+                        </h3>
                       </div>
-                    ))}
-                  </div>
-                </details>
-              </div>
-            );
-          })}
+                      <span className="material-symbols-outlined text-slate-400 transition-transform group-open:rotate-180">
+                        expand_more
+                      </span>
+                    </summary>
+
+                    <div className="px-4 pb-4 pt-0 border-t border-slate-100 dark:border-white/5 divide-y divide-slate-50 dark:divide-white/5">
+                      {phase.topics?.map((topic) => (
+                        <div
+                          key={topic.id}
+                          className={`py-4 flex gap-3 transition-colors ${topic.is_completed ? "opacity-60" : ""}`}
+                        >
+                          <div className="relative flex items-start pt-0.5">
+                            <input
+                              type="checkbox"
+                              checked={topic.is_completed}
+                              onChange={() => {
+                                !isLocked && handleCheckToggle(topic.id);
+                              }}
+                              className="peer h-5 w-5 rounded-full border-2 border-slate-300 dark:border-white/10 text-primary focus:ring-0 focus:ring-offset-0 cursor-pointer transition-all"
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <p
+                              className={`text-sm font-bold leading-snug ${topic.is_completed ? "line-through text-slate-500" : "text-slate-800 dark:text-slate-200"}`}
+                            >
+                              {topic.topic_title}
+                            </p>
+                            {topic.description && (
+                              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                {topic.description}
+                              </p>
+                            )}
+
+                            {/* Resources */}
+                            {topic.resources?.length > 0 && !isLocked && (
+                              <div className="flex flex-wrap gap-2 mt-3">
+                                {topic.resources.map((res, i) => (
+                                  <a
+                                    key={i}
+                                    href={res.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tight transition-all hover:scale-105 active:scale-95 ${
+                                      res.type === "video"
+                                        ? "bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400"
+                                        : "bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400"
+                                    }`}
+                                  >
+                                    <span className="material-symbols-outlined text-[14px]">
+                                      {res.type === "video"
+                                        ? "play_circle"
+                                        : res.type == "article"
+                                          ? "description"
+                                          : "article"}
+                                    </span>
+                                    {res.type === "video"
+                                      ? "Watch Video"
+                                      : res.type == "article"
+                                        ? "Article"
+                                        : "Documentation"}
+                                  </a>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+
+                      {/* Test me! Button */}
+                      {isCompleted && (
+                        <div className="pt-4 border-t border-slate-100 dark:border-white/5">
+                          <button
+                            onClick={() => handleTestMe(phase.id)}
+                            disabled={isGeneratingQuiz === phase.id}
+                            className="w-full py-3 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2"
+                          >
+                            <span className="material-symbols-outlined text-[20px]">
+                              {isGeneratingQuiz === phase.id ? "sync" : "quiz"}
+                            </span>
+                            {isGeneratingQuiz === phase.id
+                              ? "Preparing Quiz..."
+                              : "Test me!"}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </details>
+                </div>
+              );
+            });
+          })()}
 
           {/* Celebration & Feedback Button */}
           {Math.round(roadmap.progress_pecent) === 100 && (

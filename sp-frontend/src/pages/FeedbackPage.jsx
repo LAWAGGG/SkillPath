@@ -79,7 +79,7 @@ export default function FeedbackPage() {
     <div className="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen relative overflow-hidden">
       <div className="relative mx-auto flex h-full min-h-screen w-full max-w-md flex-col overflow-x-hidden bg-background-light dark:bg-background-dark shadow-2xl border-x border-slate-200/50 dark:border-white/5">
         {/* Header */}
-        <header className="sticky top-0 z-50 bg-white/60 dark:bg-background-dark/60 px-4 py-4 backdrop-blur-lg border-b border-slate-200/50 dark:border-white/5">
+        <header className="sticky top-0 z-50 light:bg-white/60 dark:bg-background-dark/60 px-4 py-4 backdrop-blur-lg border-b border-slate-200/50 dark:border-white/5">
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate(-1)}
