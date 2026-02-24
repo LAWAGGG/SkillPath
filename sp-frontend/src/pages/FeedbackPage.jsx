@@ -55,6 +55,7 @@ export default function FeedbackPage() {
 
   useEffect(() => {
     fetchFeedbacks();
+
   }, []);
 
   useEffect(() => {
@@ -74,6 +75,7 @@ export default function FeedbackPage() {
       </div>
     );
   }
+
 
   return (
     <div className="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen relative overflow-hidden">
@@ -190,17 +192,20 @@ export default function FeedbackPage() {
                     <h3 className="font-bold">Saran Konkret</h3>
                   </div>
                   <ul className="space-y-3">
-                    {feedbacks[0].saran_konkret?.map((saran, i) => (
-                      <li
-                        key={i}
-                        className="flex gap-3 text-sm text-slate-600 dark:text-slate-400 font-medium"
-                      >
-                        <span className="h-5 w-5 rounded-full bg-slate-100 dark:bg-white/5 flex-shrink-0 flex items-center justify-center text-[10px] font-black text-slate-400">
-                          {i + 1}
-                        </span>
-                        {saran}
-                      </li>
-                    ))}
+                    {
+                      Array.isArray(feedbacks[0].saran_konkret) ? feedbacks[0].saran_konkret?.map((saran, i) => (
+                        <li
+                          key={i}
+                          className="flex gap-3 text-sm text-slate-600 dark:text-slate-400 font-medium"
+                        >
+                          <span className="h-5 w-5 rounded-full bg-slate-100 dark:bg-white/5 flex-shrink-0 flex items-center justify-center text-[10px] font-black text-slate-400">
+                            {i + 1}
+                          </span>
+                          {saran}
+                        </li>
+                      ))
+                        : <p>{feedbacks[0].saran_konkret}</p>
+                    }
                   </ul>
                 </div>
 

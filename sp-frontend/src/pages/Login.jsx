@@ -11,7 +11,7 @@ export default function Login() {
   const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
 
-  async function handleLogin(e) {
+ async function handleLogin(e) {
     e.preventDefault();
     api
       .post("/auth/login", {
@@ -28,9 +28,14 @@ export default function Login() {
         }
       })
       .catch((error) => {
-        setErrorMessage(error.response.data.message);
-        if (error.response.status == 422) {
-          setErrors(error.response.data.errors);
+        if (error.response) {
+          setErrorMessage(error.response.data.message);
+          if (error.response.status == 422) {
+            setErrors(error.response.data.errors);
+          }
+        } else {
+          setErrorMessage("Cannot connect to server. Please check your connection.");
+          console.error("Network Error:", error.message);
         }
       });
   }
