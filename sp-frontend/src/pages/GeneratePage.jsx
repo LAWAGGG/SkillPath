@@ -46,9 +46,8 @@ export default function GeneratePage() {
     setError("");
     setLoading(true);
 
-    // Increase timeout to 60s for AI generation
     api
-      .post("/roadmaps/generate", formData, { timeout: 60000 })
+      .post("/roadmaps/generate", formData, { timeout: 180000 })
       .then((res) => {
         if (res.data.success) {
           navigate(`/roadmap/${res.data.data.id}`);
@@ -149,10 +148,10 @@ export default function GeneratePage() {
                   </label>
                   <div className="grid grid-cols-2 gap-3">
                     {[
-                      "Beginner (pemula)",
-                      "Intermediate (menengah)",
-                      "Hampir Pro",
-                      "Advanced (ahli)",
+                      "Beginner",
+                      "Intermediate",
+                      "Highly Skilled",
+                      "Advanced",
                     ].map((lvl) => (
                       <button
                         key={lvl}

@@ -259,6 +259,58 @@ class RoadmapController extends Controller
     }
 
     /**
+     * Display detail of a specific topic within a roadmap.
+     */
+    public function showTopic($roadmapId, $topicId)
+    {
+        $user = Auth::guard("sanctum")->user();
+        $roadmap = Roadmap::find($roadmapId);
+
+        if (!$roadmap) {
+            return response()->json([
+                "success" => false,
+                "message" => "Roadmap not found"
+            ], 404);
+        }
+
+        if ($roadmap->user_id !== $user->id && $user->role != "admin") {
+            return response()->json([
+                "success" => false,
+                "message" => "Forbidden Access"
+            ], 403);
+        }
+
+        $topic = RoadmapTopic::with('topicResources')
+            ->whereHas('roadmapPhase', fn($q) => $q->where('roadmap_id', $roadmap->id))
+            ->find($topicId);
+
+        if (!$topic) {
+            return response()->json([
+                "success" => false,
+                "message" => "Topic not found"
+            ], 404);
+        }
+
+        return response()->json([
+            "success" => true,
+            "data" => [
+                "id" => $topic->id,
+                "topic_title" => $topic->topic_title,
+                "description" => $topic->description,
+                "completed_at" => $topic->completed_at,
+                "is_completed" => $topic->is_completed == 1 ? true : false,
+                "resources" => $topic->topicResources->map(function ($resource) {
+                    return [
+                        "title" => $resource->title,
+                        "url" => $resource->url,
+                        "type" => $resource->type,
+                    ];
+                }),
+            ]
+        ]);
+    }
+
+    /**
      * Remove the specified resource from storage.
      */
     public function destroy($id)

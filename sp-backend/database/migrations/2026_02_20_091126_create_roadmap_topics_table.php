@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId("roadmap_phase_id")->constrained("roadmap_phases")->onDelete("cascade");
             $table->text("topic_title");
-            $table->text("description");
+            $table->longText("description");
             $table->integer("order");
             $table->boolean("is_completed")->default(false);
             $table->dateTime("completed_at")->nullable();

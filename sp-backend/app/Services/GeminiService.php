@@ -24,58 +24,188 @@ class GeminiService
 {
   private string $apiKey;
   private string $model;
-  private string $baseUrl;
+  private string $streamUrl;
 
   public function __construct()
   {
     $this->apiKey = config('services.gemini.key');
     $this->model = config('services.gemini.model');
-    $this->baseUrl = "https://generativelanguage.googleapis.com/v1beta/models/{$this->model}:generateContent";
+    $this->streamUrl = "https://generativelanguage.googleapis.com/v1beta/models/{$this->model}:streamGenerateContent";
   }
 
-  private function callGemini(string $prompt): string
+  private function callGemini(string $prompt, int $maxRetries = 1): string
   {
-    $response = Http::timeout(60)->post("{$this->baseUrl}?key={$this->apiKey}", [
-      'contents' => [
-        [
-          'parts' => [
-            ['text' => $prompt]
-          ]
-        ]
-      ],
-      'generationConfig' => [
-        'temperature'       => 0.7,
-        'maxOutputTokens'   => 16384,
-        'responseMimeType'  => 'application/json',
+    $fullText = '';
+    $messages = [
+      [
+        'role' => 'user',
+        'parts' => [['text' => $prompt]]
       ]
-    ]);
+    ];
 
-    if ($response->failed()) {
-      Log::error('Gemini API Error', [
-        'status' => $response->status(),
-        'body'   => $response->body(),
-      ]);
-      throw new \Exception('Gagal menghubungi Gemini API: ' . $response->status());
+    for ($attempt = 0; $attempt <= $maxRetries; $attempt++) {
+      $response = Http::connectTimeout(15)
+        ->timeout(180)
+        ->post("{$this->streamUrl}?alt=sse&key={$this->apiKey}", [
+          'contents' => $messages,
+          'generationConfig' => [
+            'temperature'       => 0.7,
+            'maxOutputTokens'   => 65536,
+            'responseMimeType'  => 'application/json',
+          ]
+        ]);
+
+      if ($response->failed()) {
+        Log::error('Gemini API Error', [
+          'status' => $response->status(),
+          'body'   => $response->body(),
+        ]);
+        throw new \Exception('Gagal menghubungi Gemini API: ' . $response->status());
+      }
+
+      $chunkText = '';
+      $finishReason = null;
+      $lines = explode("\n", $response->body());
+
+      foreach ($lines as $line) {
+        $line = trim($line);
+        if (str_starts_with($line, 'data: ')) {
+          $json = substr($line, 6);
+          $chunk = json_decode($json, true);
+
+          // Check for API-level errors in the stream
+          if (isset($chunk['error'])) {
+            Log::error('Gemini Stream Error Chunk', ['chunk' => $chunk]);
+            throw new \Exception('Gemini API Error: ' . ($chunk['error']['message'] ?? 'Unknown error'));
+          }
+
+          if (isset($chunk['candidates'][0]['content']['parts'][0]['text'])) {
+            $chunkText .= $chunk['candidates'][0]['content']['parts'][0]['text'];
+          }
+
+          if (isset($chunk['candidates'][0]['finishReason'])) {
+            $finishReason = $chunk['candidates'][0]['finishReason'];
+          }
+        }
+      }
+
+      $fullText .= $chunkText;
+
+      if ($finishReason === 'MAX_TOKENS' && $attempt < $maxRetries) {
+        Log::warning('Gemini response truncated (MAX_TOKENS), attempting continuation...', [
+          'attempt' => $attempt + 1,
+          'fullTextLength' => strlen($fullText),
+        ]);
+
+        // Build continuation: append model's partial response and ask to continue
+        $messages[] = [
+          'role' => 'model',
+          'parts' => [['text' => $chunkText]]
+        ];
+        $messages[] = [
+          'role' => 'user',
+          'parts' => [['text' => 'Response JSON kamu terpotong. Lanjutkan TEPAT dari posisi terakhir, jangan ulangi dari awal. Lanjutkan menulis sisa JSON-nya saja.']]
+        ];
+
+        continue;
+      }
+
+      if ($finishReason === 'MAX_TOKENS') {
+        Log::error('Gemini response still truncated after retry', ['fullTextLength' => strlen($fullText)]);
+      }
+
+      break;
     }
 
-    $result = $response->json();
+    if (empty($fullText)) {
+      Log::error('Gemini empty response', ['body' => $response->body()]);
+      throw new \Exception('Response AI kosong atau tidak lengkap, coba lagi.');
+    }
 
-    return $result['candidates'][0]['content']['parts'][0]['text'] ?? '';
+    return $fullText;
   }
 
   private function parseJson(string $raw): array
   {
-    $clean = preg_replace('/```json|```/', '', $raw);
-    $clean = trim($clean);
+    // Robust extraction: find the first '{' and the last '}'
+    if (preg_match('/\{.*\}/s', $raw, $matches)) {
+      $clean = $matches[0];
+    } else {
+      $clean = preg_replace('/```json|```/', '', $raw);
+      $clean = trim($clean);
+    }
 
     $decoded = json_decode($clean, true);
 
     if (json_last_error() !== JSON_ERROR_NONE) {
-      Log::error('Gemini JSON Parse Error', ['raw' => $raw]);
-      throw new \Exception('Response AI tidak valid, coba lagi.');
+      Log::warning('Gemini JSON Parse Error, trying to auto-repair...', [
+        'error' => json_last_error_msg()
+      ]);
+      
+      $clean = $this->repairJson($clean);
+      $decoded = json_decode($clean, true);
+      
+      if (json_last_error() !== JSON_ERROR_NONE) {
+          Log::error('Gemini JSON Repair Failed', [
+            'error' => json_last_error_msg(),
+            'raw_snippet' => substr($raw, -500)
+          ]);
+          throw new \Exception('Response AI tidak lengkap (terpotong) dan gagal dipulihkan, silakan coba lagi dengan jumlah topik yang sedikit lebih padat atau spesifik.');
+      }
     }
 
     return $decoded;
+  }
+
+  /**
+   * Auto-repair truncated JSON by checking unclosed strings and brackets.
+   */
+  private function repairJson(string $json): string
+  {
+    $inString = false;
+    $escape = false;
+    $stack = []; // Stores expected closing brackets
+
+    for ($i = 0; $i < strlen($json); $i++) {
+      $c = $json[$i];
+
+      if ($escape) {
+        $escape = false;
+        continue;
+      }
+      if ($c === '\\') {
+        $escape = true;
+        continue;
+      }
+      if ($c === '"') {
+        $inString = !$inString;
+        continue;
+      }
+
+      if (!$inString) {
+        if ($c === '{') {
+          $stack[] = '}';
+        } elseif ($c === '[') {
+          $stack[] = ']';
+        } elseif ($c === '}' || $c === ']') {
+          array_pop($stack);
+        }
+      }
+    }
+
+    if ($inString) {
+      $json .= '"';
+    }
+
+    // Clean up trailing commas if any, ignoring whitespace
+    $json = preg_replace('/,\s*$/', '', $json);
+
+    // Close all remaining brackets
+    while (!empty($stack)) {
+      $json .= array_pop($stack);
+    }
+
+    return $json;
   }
 
   public function generateRoadmap(array $input, object $skill): array
@@ -92,16 +222,27 @@ Data pengguna:
 - Target deadline: {$input['target_deadline']}
 - Tujuan akhir: {$input['tujuan_akhir']}
 
+Setiap topik WAJIB memiliki field 'description' yang berisi penjelasan ringkas nan padat tentang materi tersebut, MAKSIMAL 2-3 paragraf. Description ini harus berfungsi sebagai materi pembelajaran yang to-the-point. Gunakan format Markdown.
+
+Struktur description yang WAJIB diikuti:
+1. **Pengantar & Konsep**: Jelaskan secara sederhana apa itu [topik] dan konsep utamanya.
+2. **Contoh Praktis**: Berikan contoh kode singkat JIKA relevan.
+3. **Tips & Rangkuman**: Poin penting yang harus diingat.
+
+Gunakan bahasa Indonesia yang mudah dipahami.
+JANGAN melebihi 3 paragraf per topik. Buat penjelasan sepadat mungkin!
+
 ATURAN RESOURCE (SANGAT PENTING):
+- Berikan MAKSIMAL 2 link resource per topik (Dokumentasi/Video/Artikel).
 - DOCUMENTATION: Gunakan link dokumentasi resmi yang valid.
-- VIDEO: JANGAN buat link direct video (kecuali sangat yakin). Gunakan format search YouTube: https://www.youtube.com/results?search_query=[keyword+pencarian+relevan]
-- ARTICLE: JANGAN buat link direct. Gunakan format search Google dengan filter 'site:' sesuai topik. Gunakan KEYWORD DALAM BAHASA INGGRIS pada query pencarian agar hasil lebih akurat:
-  * HTML, CSS, JS, PHP Dasar, SQL, Git Dasar: gunakan 'site:w3schools.com'
-  * Laravel, Framework PHP: gunakan 'site:petanikode.com' atau 'site:malasngoding.com'
-  * Topik Mahir/Inggris: gunakan 'site:freecodecamp.org' atau 'site:dev.to'
-  * Format: https://www.google.com/search?q=[English+Keyword]+site:[domain]
+- VIDEO: Format search YouTube: https://www.youtube.com/results?search_query=[keyword]
+- ARTICLE: Format search Google dengan filter 'site:': https://www.google.com/search?q=[keyword]+site:[domain]
 - JANGAN PERNAH gunakan link placeholder atau dummy.
-- Pastikan setiap fase memiliki MINIMAL 2 TOPIK pembelajaran.
+
+ATURAN JUMLAH FASE DAN TOPIK (KRUSIAL UNTUK MENGHINDARI ERROR TOKEN LIMIT):
+- Sesuaikan jumlah fase dan topik dengan kebutuhan materi.
+- BAGAIMANAPUN JUGA, total KESELURUHAN TOPIK dalam roadmap JANGAN MELEBIHI 15 Topik! 
+- Jika materi skill sangat luas, KELOMPOKKAN beberapa materi kecil menjadi satu topik (modul) besar. Jangan memecahnya menjadi 20+ topik karena respons PASTI akan terpotong (truncated) oleh sistem!
 
 Format JSON yang harus dikembalikan:
 {
@@ -119,7 +260,7 @@ Format JSON yang harus dikembalikan:
       \"topics\": [
         {
           \"topic_title\": \"string\",
-          \"description\": \"string\",
+          \"description\": \"string (WAJIB detail 2-3 paragraf dalam format Markdown, berisi penjelasan lengkap materi, contoh kode, tips, dan rangkuman poin kunci)\",
           \"order\": integer,
           \"resources\": [
             {
@@ -276,10 +417,10 @@ Format JSON yang harus dikembalikan:
     ]);
   }
 
-  public function evaluateRoadmap(array $data): array
+  public function evaluateRoadmap(array $input): array
   {
-    $currentPhasesText = '';
-    foreach ($data['current_phases'] as $phase) {
+    $currentPhasesText = "";
+    foreach ($input['current_phases'] as $phase) {
       $currentPhasesText .= "\n  Fase: {$phase['phase_title']} (order: {$phase['order']})\n";
       foreach ($phase['topics'] as $topic) {
         $status = $topic['is_completed'] ? '✅ Selesai' : '❌ Belum';
@@ -288,55 +429,48 @@ Format JSON yang harus dikembalikan:
     }
 
     $changesText = '';
-    if (!empty($data['new_hours_per_day'])) {
-      $changesText .= "- Jam belajar per hari diubah dari {$data['old_hours_per_day']} jam menjadi {$data['new_hours_per_day']} jam\n";
+    if (!empty($input['new_hours_per_day'])) {
+      $changesText .= "- Jam belajar per hari diubah dari {$input['old_hours_per_day']} jam menjadi {$input['new_hours_per_day']} jam\n";
     }
-    if (!empty($data['new_target_deadline'])) {
-      $changesText .= "- Target deadline diubah menjadi {$data['new_target_deadline']}\n";
+    if (!empty($input['new_target_deadline'])) {
+      $changesText .= "- Target deadline diubah menjadi {$input['new_target_deadline']}\n";
     }
-    if (!empty($data['catatan_perubahan'])) {
-      $changesText .= "- Request khusus dari pengguna: {$data['catatan_perubahan']}\n";
+    if (!empty($input['catatan_perubahan'])) {
+      $changesText .= "- Request khusus dari pengguna: {$input['catatan_perubahan']}\n";
     }
+
+    $existingTitles = collect($input['current_phases'])
+      ->flatMap(fn($p) => collect($p['topics'])->pluck('topic_title'))
+      ->implode(', ');
 
     $prompt = "Kamu adalah mentor belajar mandiri berpengalaman.
-Evaluasi dan sesuaikan ulang roadmap belajar yang sudah ada berdasarkan perubahan yang diminta pengguna.
-Response HANYA dalam format JSON valid, tanpa teks apapun di luar JSON.
+Tugas: Evaluasi dan sesuaikan roadmap belajar berikut berdasarkan perubahan yang diminta.
+Response HANYA dalam format JSON valid.
 
-Informasi roadmap saat ini:
-- Skill: {$data['skill_name']}
-- Level: {$data['level']}
-- Tujuan akhir: {$data['tujuan_akhir']}
-- Jam belajar per hari saat ini: {$data['old_hours_per_day']} jam
-- Target deadline saat ini: {$data['old_target_deadline']}
-- Progress: {$data['completed_topics']}/{$data['total_topics']} topik selesai ({$data['progress_persen']}%)
-
-Struktur roadmap saat ini:
+INFORMASI ROADMAP SAAT INI:
+- Skill: {$input['skill_name']}
+- Level: {$input['level']}
+- Jam belajar: {$input['old_hours_per_day']} jam/hari
+- Deadline: {$input['old_target_deadline']}
+- Struktur:
 {$currentPhasesText}
 
-Perubahan yang diminta:
+JUDUL TOPIK YANG SUDAH ADA (PROTECTED):
+[ {$existingTitles} ]
+
+ATURAN REUSE JUDUL (SANGAT KRUSIAL):
+1. Jika suatu topik sudah ada di daftar di atas, gunakan JUDUL YANG SAMA PERSIS.
+2. JANGAN mengubah judul topik lama kecuali diminta spesifik. Perubahan judul akan memicu regenerasi deskripsi yang memakan banyak token.
+3. UNTUK PENGHEMATAN TOKEN: Bagi topik yang judulnya SAMA dengan daftar di atas, KOSONGKAN field 'description' dan 'resources'. Kami akan mengambil data lama dari database.
+
+PERUBAHAN YANG DIMINTA:
 {$changesText}
 
-ATURAN PENTING:
-1. Topik yang sudah selesai (✅) WAJIB tetap ada dengan topic_title yang SAMA PERSIS
-2. Sesuaikan durasi estimasi dan struktur fase berdasarkan perubahan yang diminta
-3. Boleh menambah, mengubah, atau menghapus topik yang BELUM selesai
-4. Pastikan urutan (order) tetap logis dan berurutan
-5. Maksimal 2 resource per topik
-6. Maksimal 3-5 fase, dengan total topik tidak lebih dari 15
-7. ATURAN RESOURCE (SANGAT PENTING):
-   - DOCUMENTATION: Link resmi valid.
-   - VIDEO: Gunakan URL search YouTube: https://www.youtube.com/results?search_query=[keyword]
-   - ARTICLE: Gunakan format search Google spesifik sesuai topik. Gunakan KEYWORD DALAM BAHASA INGGRIS pada query pencarian:
-     * Dasar (HTML/CSS/JS/PHP/SQL/Git): site:w3schools.com
-     * Laravel/Framework: site:petanikode.com atau site:malasngoding.com
-     * Lanjutan/English: site:freecodecamp.org atau site:dev.to
-     * URL: https://www.google.com/search?q=[English+Keyword]+site:[domain]
-   - DILARANG KERAS menggunakan link dummy/placeholder. Gunakan pola pencarian di atas jika ragu.
-   - Setiap fase baru WAJIB memiliki MINIMAL 2 TOPIK.
+HANYA untuk TOPIK BARU (yang judulnya tidak ada di daftar Protected), WAJIB isi 'description' (materi pembelajaran MAKSIMAL 2-3 paragraf padat Markdown).
 
-Format JSON yang harus dikembalikan:
+Format JSON:
 {
-  \"ringkasan\": \"string penjelasan singkat perubahan yang dilakukan\",
+  \"ringkasan\": \"string penjelasan perubahan\",
   \"phases\": [
     {
       \"phase_title\": \"string\",
@@ -346,16 +480,10 @@ Format JSON yang harus dikembalikan:
       \"topics\": [
         {
           \"topic_title\": \"string\",
-          \"description\": \"string\",
+          \"description\": \"(Kosongkan jika judul ada di daftar Protected. Isi maksimal 2-3 paragraf jika TOPIK BARU)\",
           \"order\": integer,
           \"is_completed\": boolean,
-          \"resources\": [
-            {
-              \"title\": \"string\",
-              \"url\": \"string (URL pencarian/dokumentasi valid, NO PLACEHOLDER)\",
-              \"type\": \"video/article/course/documentation\"
-            }
-          ]
+          \"resources\": [] // Kosongkan jika judul ada di daftar Protected.
         }
       ]
     }
@@ -414,25 +542,23 @@ Format JSON yang harus dikembalikan:
 
     $aiResult = $this->evaluateRoadmap($data);
 
-    $completedTitles = $roadmap->roadmapPhases
+    $oldTopicsData = $roadmap->roadmapPhases
       ->flatMap(fn($phase) => $phase->roadmapTopics)
-      ->where('is_completed', true)
-      ->pluck('topic_title')
-      ->toArray();
-
-    $completedTopicsData = $roadmap->roadmapPhases
-      ->flatMap(fn($phase) => $phase->roadmapTopics)
-      ->where('is_completed', true)
       ->mapWithKeys(fn($topic) => [
-        $topic->topic_title => $topic->topicResources->map(fn($r) => [
-          'title' => $r->title,
-          'url'   => $r->url,
-          'type'  => $r->type,
-        ])->toArray()
+        trim($topic->topic_title) => [
+          'description'  => $topic->description,
+          'is_completed' => (bool) $topic->is_completed,
+          'completed_at' => $topic->completed_at,
+          'resources'    => $topic->topicResources->map(fn($r) => [
+            'title' => $r->title,
+            'url'   => $r->url,
+            'type'  => $r->type,
+          ])->toArray()
+        ]
       ])
       ->toArray();
 
-    return DB::transaction(function () use ($completedTitles, $completedTopicsData, $roadmap, $validated, $aiResult) {
+    return DB::transaction(function () use ($oldTopicsData, $roadmap, $validated, $aiResult) {
       $updates = ['ai_raw_response' => json_encode($aiResult)];
       if (!empty($validated['hours_per_day'])) $updates['hours_per_day'] = $validated['hours_per_day'];
       if (!empty($validated['target_deadline'])) $updates['target_deadline'] = $validated['target_deadline'];
@@ -451,28 +577,36 @@ Format JSON yang harus dikembalikan:
         ]);
 
         foreach ($phaseData['topics'] as $topicData) {
-          $isCompleted = in_array($topicData['topic_title'], $completedTitles);
+          // Normalize title for safer lookup
+          $lookupTitle = trim($topicData['topic_title']);
+          $oldTopic = $oldTopicsData[$lookupTitle] ?? null;
+
+          $isCompleted = $topicData['is_completed'] ?? ($oldTopic['is_completed'] ?? false);
 
           $topic = RoadmapTopic::create([
             'roadmap_phase_id' => $phase->id,
             'topic_title'      => $topicData['topic_title'],
-            'description'      => $topicData['description'] ?? '',
+            'description'      => (!empty($topicData['description']) && !in_array(strtolower(trim($topicData['description'])), ['retain', 'kosong', '']))
+              ? $topicData['description']
+              : ($oldTopic['description'] ?? ''),
             'order'            => $topicData['order'],
             'is_completed'     => $isCompleted,
-            'completed_at'     => $isCompleted ? now() : null,
+            'completed_at'     => $oldTopic['completed_at'] ?? ($isCompleted ? now() : null),
           ]);
 
-          $resources = ($isCompleted && isset($completedTopicsData[$topicData['topic_title']]))
-            ? $completedTopicsData[$topicData['topic_title']]
-            : ($topicData['resources'] ?? []);
+          $resources = (!empty($topicData['resources']))
+            ? $topicData['resources']
+            : ($oldTopic['resources'] ?? []);
 
           foreach ($resources as $resourceData) {
+            if (empty($resourceData['title']) || empty($resourceData['url'])) continue;
+
             TopicResource::create([
               'roadmap_topic_id' => $topic->id,
               'title'            => $resourceData['title'],
               'url'              => $resourceData['url'],
-              'type'             => in_array($resourceData['type'], ['video', 'article', 'course', 'documentation'])
-                ? $resourceData['type']
+              'type'             => in_array($resourceData['type'] ?? 'article', ['video', 'article', 'course', 'documentation'])
+                ? ($resourceData['type'] ?? 'article')
                 : 'article',
             ]);
           }

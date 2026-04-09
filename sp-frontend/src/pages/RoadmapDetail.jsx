@@ -338,42 +338,17 @@ export default function RoadmapDetail() {
                             >
                               {topic.topic_title}
                             </p>
-                            {topic.description && (
-                              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                                {topic.description}
-                              </p>
-                            )}
 
-                            {/* Resources */}
-                            {topic.resources?.length > 0 && !isLocked && (
-                              <div className="flex flex-wrap gap-2 mt-3">
-                                {topic.resources.map((res, i) => (
-                                  <a
-                                    key={i}
-                                    href={res.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tight transition-all hover:scale-105 active:scale-95 ${
-                                      res.type === "video"
-                                        ? "bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400"
-                                        : "bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400"
-                                    }`}
-                                  >
-                                    <span className="material-symbols-outlined text-[14px]">
-                                      {res.type === "video"
-                                        ? "play_circle"
-                                        : res.type == "article"
-                                          ? "description"
-                                          : "article"}
-                                    </span>
-                                    {res.type === "video"
-                                      ? "Watch Video"
-                                      : res.type == "article"
-                                        ? "Article"
-                                        : "Documentation"}
-                                  </a>
-                                ))}
-                              </div>
+                            {!isLocked && (
+                              <button
+                                onClick={() => navigate(`/roadmap/${params.id}/topic/${topic.id}`)}
+                                className="mt-2 text-xs font-black uppercase tracking-widest text-primary hover:text-primary-dark transition-colors flex items-center gap-1"
+                              >
+                                <span>Baca Materi</span>
+                                <span className="material-symbols-outlined text-[14px]">
+                                  arrow_forward
+                                </span>
+                              </button>
                             )}
                           </div>
                         </div>

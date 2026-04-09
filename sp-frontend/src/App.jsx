@@ -20,6 +20,7 @@ import Profile from "./pages/Profile";
 import FeedbackPage from "./pages/FeedbackPage";
 import Quiz from "./pages/Quiz";
 import QuizResult from "./pages/QuizResult";
+import TopicDetail from "./pages/TopicDetail";
 import { getRole, getToken } from "./utils/uttils";
 
 function App() {
@@ -100,6 +101,11 @@ function App() {
         <Route
           path="/admin/profile"
           element={<AdminProfile></AdminProfile>}
+        ></Route>
+
+        <Route
+          path="/roadmap/:roadmapId/topic/:topicId"
+          element={<TopicDetail></TopicDetail>}
         ></Route>
       </Routes>
     </>
