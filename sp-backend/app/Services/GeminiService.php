@@ -25,104 +25,157 @@ class GeminiService
   private string $apiKey;
   private string $model;
   private string $streamUrl;
+  private string $fallbackModel;
+  private string $fallbackStreamUrl;
 
   public function __construct()
   {
-    $this->apiKey = config('services.gemini.key');
-    $this->model = config('services.gemini.model');
-    $this->streamUrl = "https://generativelanguage.googleapis.com/v1beta/models/{$this->model}:streamGenerateContent";
+    $this->apiKey          = config('services.gemini.key');
+    $this->model           = config('services.gemini.model');
+    $this->streamUrl       = "https://generativelanguage.googleapis.com/v1beta/models/{$this->model}:streamGenerateContent";
+    $this->fallbackModel   = config('services.gemini.fallback_model', 'gemini-2.5-flash-lite');
+    $this->fallbackStreamUrl = "https://generativelanguage.googleapis.com/v1beta/models/{$this->fallbackModel}:streamGenerateContent";
   }
 
-  private function callGemini(string $prompt, int $maxRetries = 1): string
+  private function callGemini(string $prompt, int $maxRetries = 3): string
   {
-    $fullText = '';
-    $messages = [
+    $baseMessages = [
       [
-        'role' => 'user',
+        'role'  => 'user',
         'parts' => [['text' => $prompt]]
       ]
     ];
 
-    for ($attempt = 0; $attempt <= $maxRetries; $attempt++) {
-      $response = Http::connectTimeout(15)
-        ->timeout(180)
-        ->post("{$this->streamUrl}?alt=sse&key={$this->apiKey}", [
-          'contents' => $messages,
-          'generationConfig' => [
-            'temperature'       => 0.7,
-            'maxOutputTokens'   => 65536,
-            'responseMimeType'  => 'application/json',
-          ]
-        ]);
+    // Try primary model first, then fallback if 503 is exhausted
+    $modelsToTry = [
+      ['url' => $this->streamUrl,         'name' => $this->model],
+      ['url' => $this->fallbackStreamUrl, 'name' => $this->fallbackModel],
+    ];
 
-      if ($response->failed()) {
-        Log::error('Gemini API Error', [
-          'status' => $response->status(),
-          'body'   => $response->body(),
+    foreach ($modelsToTry as $modelIndex => $modelConfig) {
+      $fullText = '';
+      $messages = $baseMessages;
+
+      if ($modelIndex > 0) {
+        Log::warning('Switching to fallback Gemini model', [
+          'fallback_model' => $modelConfig['name'],
         ]);
-        throw new \Exception('Gagal menghubungi Gemini API: ' . $response->status());
+        sleep(2); // brief pause before trying fallback
       }
 
-      $chunkText = '';
-      $finishReason = null;
-      $lines = explode("\n", $response->body());
+      for ($attempt = 0; $attempt <= $maxRetries; $attempt++) {
+        $response = Http::connectTimeout(15)
+          ->timeout(180)
+          ->post("{$modelConfig['url']}?alt=sse&key={$this->apiKey}", [
+            'contents'         => $messages,
+            'generationConfig' => [
+              'temperature'      => 0.7,
+              'maxOutputTokens'  => 65536,
+              'responseMimeType' => 'application/json',
+            ]
+          ]);
 
-      foreach ($lines as $line) {
-        $line = trim($line);
-        if (str_starts_with($line, 'data: ')) {
-          $json = substr($line, 6);
-          $chunk = json_decode($json, true);
+        // 503: retry with exponential backoff on the same model
+        if ($response->status() === 503 && $attempt < $maxRetries) {
+          $waitSeconds = pow(2, $attempt + 1); // 2s, 4s, 8s
+          Log::warning('Gemini API 503 (high demand), retrying...', [
+            'model'        => $modelConfig['name'],
+            'attempt'      => $attempt + 1,
+            'retry_in_sec' => $waitSeconds,
+          ]);
+          sleep($waitSeconds);
+          continue;
+        }
 
-          // Check for API-level errors in the stream
-          if (isset($chunk['error'])) {
-            Log::error('Gemini Stream Error Chunk', ['chunk' => $chunk]);
-            throw new \Exception('Gemini API Error: ' . ($chunk['error']['message'] ?? 'Unknown error'));
-          }
+        // 503 after all retries exhausted → break to try fallback model
+        if ($response->status() === 503) {
+          Log::warning('Gemini all retries exhausted on 503, switching to fallback model...', [
+            'model' => $modelConfig['name'],
+          ]);
+          break; // eksit for → foreach lanjut ke model berikutnya
+        }
 
-          if (isset($chunk['candidates'][0]['content']['parts'][0]['text'])) {
-            $chunkText .= $chunk['candidates'][0]['content']['parts'][0]['text'];
-          }
+        if ($response->failed()) {
+          Log::error('Gemini API Error', [
+            'status' => $response->status(),
+            'body'   => $response->body(),
+            'model'  => $modelConfig['name'],
+          ]);
+          throw new \Exception('Gagal menghubungi Gemini API: ' . $response->status());
+        }
 
-          if (isset($chunk['candidates'][0]['finishReason'])) {
-            $finishReason = $chunk['candidates'][0]['finishReason'];
+        $chunkText    = '';
+        $finishReason = null;
+        $lines        = explode("\n", $response->body());
+
+        foreach ($lines as $line) {
+          $line = trim($line);
+          if (str_starts_with($line, 'data: ')) {
+            $json  = substr($line, 6);
+            $chunk = json_decode($json, true);
+
+            // Check for API-level errors in the stream
+            if (isset($chunk['error'])) {
+              Log::error('Gemini Stream Error Chunk', ['chunk' => $chunk]);
+              throw new \Exception('Gemini API Error: ' . ($chunk['error']['message'] ?? 'Unknown error'));
+            }
+
+            if (isset($chunk['candidates'][0]['content']['parts'][0]['text'])) {
+              $chunkText .= $chunk['candidates'][0]['content']['parts'][0]['text'];
+            }
+
+            if (isset($chunk['candidates'][0]['finishReason'])) {
+              $finishReason = $chunk['candidates'][0]['finishReason'];
+            }
           }
         }
+
+        $fullText .= $chunkText;
+
+        if ($finishReason === 'MAX_TOKENS' && $attempt < $maxRetries) {
+          Log::warning('Gemini response truncated (MAX_TOKENS), attempting continuation...', [
+            'model'          => $modelConfig['name'],
+            'attempt'        => $attempt + 1,
+            'fullTextLength' => strlen($fullText),
+          ]);
+
+          // Build continuation: append model's partial response and ask to continue
+          $messages[] = [
+            'role'  => 'model',
+            'parts' => [['text' => $chunkText]]
+          ];
+          $messages[] = [
+            'role'  => 'user',
+            'parts' => [['text' => 'Response JSON kamu terpotong. Lanjutkan TEPAT dari posisi terakhir, jangan ulangi dari awal. Lanjutkan menulis sisa JSON-nya saja.']]
+          ];
+
+          continue;
+        }
+
+        if ($finishReason === 'MAX_TOKENS') {
+          Log::error('Gemini response still truncated after retry', [
+            'model'          => $modelConfig['name'],
+            'fullTextLength' => strlen($fullText),
+          ]);
+        }
+
+        break; // success atau non-503 error — keluar dari retry loop
       }
 
-      $fullText .= $chunkText;
-
-      if ($finishReason === 'MAX_TOKENS' && $attempt < $maxRetries) {
-        Log::warning('Gemini response truncated (MAX_TOKENS), attempting continuation...', [
-          'attempt' => $attempt + 1,
-          'fullTextLength' => strlen($fullText),
-        ]);
-
-        // Build continuation: append model's partial response and ask to continue
-        $messages[] = [
-          'role' => 'model',
-          'parts' => [['text' => $chunkText]]
-        ];
-        $messages[] = [
-          'role' => 'user',
-          'parts' => [['text' => 'Response JSON kamu terpotong. Lanjutkan TEPAT dari posisi terakhir, jangan ulangi dari awal. Lanjutkan menulis sisa JSON-nya saja.']]
-        ];
-
-        continue;
+      // Kalau model ini berhasil menghasilkan teks, langsung return
+      if (!empty($fullText)) {
+        return $fullText;
       }
 
-      if ($finishReason === 'MAX_TOKENS') {
-        Log::error('Gemini response still truncated after retry', ['fullTextLength' => strlen($fullText)]);
-      }
-
-      break;
+      // fullText kosong → model ini gagal (503 exhausted) → coba model berikutnya
     }
 
-    if (empty($fullText)) {
-      Log::error('Gemini empty response', ['body' => $response->body()]);
-      throw new \Exception('Response AI kosong atau tidak lengkap, coba lagi.');
-    }
-
-    return $fullText;
+    // Semua model gagal
+    Log::error('Gemini all models failed to produce a response', [
+      'primary_model'  => $this->model,
+      'fallback_model' => $this->fallbackModel,
+    ]);
+    throw new \Exception('Response AI kosong atau tidak lengkap, coba lagi.');
   }
 
   private function parseJson(string $raw): array
