@@ -205,7 +205,7 @@ export default function TopicDetail() {
               <span className="material-symbols-outlined text-[20px]">
                 {topic?.is_completed ? "restart_alt" : "done_all"}
               </span>
-              {topic?.is_completed ? "Tandai Belum Selesai" : "Materi Selesai"}
+              {topic?.is_completed ? "Undo Complete Topic" : "Complete Topic"}
             </button>
           </div>
         </div>

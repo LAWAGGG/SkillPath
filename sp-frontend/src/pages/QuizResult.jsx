@@ -67,7 +67,7 @@ export default function QuizResult() {
       <div className="min-h-screen bg-background-light dark:bg-background-dark flex flex-col items-center justify-center p-4 text-center">
         <p className="text-slate-500 mb-4">Hasil kuis tidak ditemukan.</p>
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => navigate(-2)}
           className="px-6 py-2 bg-primary text-white rounded-xl font-bold text-sm shadow-xl shadow-primary/30 active:scale-95 transition-all"
         >
           Kembali

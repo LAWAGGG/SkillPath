@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import BottomBar from "../components/BottomBar";
 import api from "../api/api";
@@ -12,6 +12,10 @@ export default function RoadmapDetail() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [confettiFired, setConfettiFired] = useState(false);
+
+  // Optimistic toggle tracking
+  const pendingToggles = useRef(new Set());
+  const [toastMessage, setToastMessage] = useState("");
 
   // Evaluation States
   const [showEvaluateModal, setShowEvaluateModal] = useState(false);
@@ -146,9 +150,47 @@ export default function RoadmapDetail() {
   }
 
   async function handleCheckToggle(topicId) {
-    api.patch(`topics/${topicId}/toggle`).then((res) => {
-      fetchRoadmap();
+    // Prevent duplicate requests for the same topic
+    if (pendingToggles.current.has(topicId)) return;
+    pendingToggles.current.add(topicId);
+
+    // Snapshot current state for rollback
+    const previousRoadmap = JSON.parse(JSON.stringify(roadmap));
+
+    // Optimistic update: immediately toggle in local state
+    setRoadmap((prev) => {
+      const updated = JSON.parse(JSON.stringify(prev));
+      let totalTopics = 0;
+      let completedTopics = 0;
+
+      updated.phases?.forEach((phase) => {
+        phase.topics?.forEach((topic) => {
+          if (topic.id === topicId) {
+            topic.is_completed = !topic.is_completed;
+          }
+          totalTopics++;
+          if (topic.is_completed) completedTopics++;
+        });
+      });
+
+      // Recalculate progress locally
+      updated.progress_pecent =
+        totalTopics > 0 ? (completedTopics / totalTopics) * 100 : 0;
+
+      return updated;
     });
+
+    // Background API call
+    try {
+      await api.patch(`topics/${topicId}/toggle`);
+    } catch (err) {
+      // Rollback on failure
+      setRoadmap(previousRoadmap);
+      setToastMessage("Gagal menyimpan perubahan. Coba lagi.");
+      setTimeout(() => setToastMessage(""), 3000);
+    } finally {
+      pendingToggles.current.delete(topicId);
+    }
   }
 
   useEffect(() => {
@@ -655,6 +697,18 @@ export default function RoadmapDetail() {
             </div>
           </div>
         )}
+      </div>
+
+      {/* Toast Notification for failed optimistic updates */}
+      <div
+        className={`fixed bottom-24 left-1/2 -translate-x-1/2 z-[200] transition-all duration-300 ${toastMessage ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"}`}
+      >
+        <div className="flex items-center gap-2 bg-red-600 text-white px-5 py-3 rounded-2xl shadow-2xl shadow-red-600/30 text-sm font-bold whitespace-nowrap">
+          <span className="material-symbols-outlined text-[18px]">
+            error
+          </span>
+          {toastMessage}
+        </div>
       </div>
     </div>
   );
