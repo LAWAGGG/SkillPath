@@ -187,7 +187,7 @@ export default function RoadmapDetail() {
         <header className="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/50 dark:border-white/5">
           <div className="px-4 py-3 flex items-center justify-between gap-4">
             <button
-              onClick={() => navigate(-1)}
+              onClick={() => navigate("/roadmaps")}
               className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-slate-100 dark:hover:bg-white/5 text-slate-600 dark:text-slate-300 transition-colors"
             >
               <span className="material-symbols-outlined">arrow_back</span>
