@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../api/api";
 import BottomBar from "../components/BottomBar";
+import Skeleton from "../components/Skeleton";
 
 export default function Roadmaps() {
   const [roadmaps, setRoadmaps] = useState([]);
@@ -45,11 +46,33 @@ export default function Roadmaps() {
         {/* Content */}
         <main className="flex-1 px-4 pb-32 pt-6 overflow-y-auto no-scrollbar">
           {loading ? (
-            <div className="flex flex-col items-center justify-center py-20 gap-4">
-              <div className="h-10 w-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                Loading Roadmaps...
-              </p>
+            <div className="grid gap-6">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="rounded-2xl bg-white dark:bg-slate-900/60 p-5 border border-slate-200/60 dark:border-white/5">
+                  <div className="flex items-start justify-between mb-5">
+                    <div className="flex items-center gap-4">
+                      <Skeleton variant="rectangular" className="h-14 w-14 rounded-2xl" />
+                      <div>
+                        <Skeleton variant="text" className="h-5 w-32 mb-2" />
+                        <Skeleton variant="text" className="h-3 w-48" />
+                      </div>
+                    </div>
+                    <Skeleton variant="rectangular" className="h-6 w-16 rounded-full" />
+                  </div>
+                  <div className="mb-5 space-y-2">
+                    <div className="flex justify-between">
+                      <Skeleton variant="text" className="h-3 w-16" />
+                      <Skeleton variant="text" className="h-3 w-8" />
+                    </div>
+                    <Skeleton variant="rectangular" className="h-2.5 w-full rounded-full" />
+                  </div>
+                  <div className="flex items-center justify-between mb-5">
+                    <Skeleton variant="text" className="h-3 w-20" />
+                    <Skeleton variant="text" className="h-3 w-20" />
+                  </div>
+                  <Skeleton variant="rectangular" className="h-12 w-full rounded-xl" />
+                </div>
+              ))}
             </div>
           ) : roadmaps.length > 0 ? (
             <div className="grid gap-6">

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import AdminBottomBar from "../../components/AdminBottomBar";
 import api from "../../api/api";
+import Skeleton from "../../components/Skeleton";
 
 export default function UserManage() {
   const [users, setUsers] = useState([]);
@@ -90,11 +91,25 @@ export default function UserManage() {
         <main className="flex-1 p-5 pb-28">
           <div className="space-y-4">
             {loading ? (
-              <div className="flex flex-col items-center justify-center py-20 gap-3">
-                <div className="h-8 w-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-                <p className="text-xs font-medium text-slate-400">
-                  Loading users...
-                </p>
+              <div className="space-y-4">
+                {[1, 2, 3, 4, 5].map(i => (
+                  <div key={i} className="bg-white dark:bg-slate-800/40 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex gap-3 min-w-0 flex-1">
+                        <Skeleton variant="circular" className="h-10 w-10 flex-shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          <Skeleton variant="text" className="h-4 w-3/4 mb-1" />
+                          <Skeleton variant="text" className="h-3 w-1/2 mb-2" />
+                          <div className="flex items-center gap-2">
+                            <Skeleton variant="rectangular" className="h-4 w-12 rounded-md" />
+                            <Skeleton variant="text" className="h-3 w-16" />
+                          </div>
+                        </div>
+                      </div>
+                      <Skeleton variant="rectangular" className="h-9 w-9 rounded-xl" />
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : filteredUsers.length > 0 ? (
               filteredUsers.map((user) => (
@@ -146,7 +161,7 @@ function UserCard({ user, onDelete }) {
                   user.role === "admin"
                     ? "bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400"
                     : "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
-                } border border-amber-200 dark:border-amber-800/50`}
+                } border border-blue-200 dark:border-blue-800/50`}
               >
                 {user.role}
               </span>

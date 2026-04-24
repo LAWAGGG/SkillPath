@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import BottomBar from "../components/BottomBar";
 import api from "../api/api";
+import Skeleton from "../components/Skeleton";
 
 export default function RoadmapDetail() {
   const navigate = useNavigate();
   const params = useParams();
   const [roadmap, setRoadmap] = useState({});
+  const [loading, setLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [confettiFired, setConfettiFired] = useState(false);
@@ -44,6 +46,7 @@ export default function RoadmapDetail() {
   ];
 
   async function fetchRoadmap() {
+    setLoading(true);
     api.get(`/roadmaps/${params.id}`).then((res) => {
       setRoadmap(res.data.data);
       setEvalData({
@@ -51,8 +54,8 @@ export default function RoadmapDetail() {
         target_deadline: res.data.data.target_deadline?.split("T")[0] || "",
         catatan_perubahan: "",
       });
-      console.log(res.data);
-    });
+      setLoading(false);
+    }).catch(() => setLoading(false));
   }
 
   async function handleGenerateFeedback() {
@@ -190,12 +193,21 @@ export default function RoadmapDetail() {
               <span className="material-symbols-outlined">arrow_back</span>
             </button>
             <div className="flex-1 text-center py-5">
-              <h1 className="text-lg font-bold tracking-tight">
-                {roadmap.title}
-              </h1>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                {roadmap.skill?.name}
-              </p>
+              {loading ? (
+                <>
+                  <Skeleton variant="text" className="h-5 w-3/4 mx-auto mb-1" />
+                  <Skeleton variant="text" className="h-3 w-1/2 mx-auto" />
+                </>
+              ) : (
+                <>
+                  <h1 className="text-lg font-bold tracking-tight">
+                    {roadmap.title}
+                  </h1>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                    {roadmap.skill?.name}
+                  </p>
+                </>
+              )}
             </div>
             <div className="flex items-center gap-1">
               <button
@@ -222,164 +234,187 @@ export default function RoadmapDetail() {
           {/* Progress Bar Area */}
           <div className="px-6 pb-4">
             <div className="flex justify-between items-end mb-2">
-              <span className="text-sm font-bold text-primary">
-                {Math.round(roadmap.progress_pecent)}% Completed
-              </span>
-              <span className="text-xs text-slate-500 dark:text-slate-400">
-                {roadmap.days_left}
-              </span>
+              {loading ? (
+                <>
+                  <Skeleton variant="text" className="h-4 w-24" />
+                  <Skeleton variant="text" className="h-3 w-16" />
+                </>
+              ) : (
+                <>
+                  <span className="text-sm font-bold text-primary">
+                    {Math.round(roadmap.progress_pecent)}% Completed
+                  </span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">
+                    {roadmap.days_left}
+                  </span>
+                </>
+              )}
             </div>
-            <div className="h-2 w-full bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-primary rounded-full transition-all duration-1000"
-                style={{ width: `${roadmap.progress_pecent}%` }}
-              ></div>
-            </div>
+            {loading ? (
+              <Skeleton variant="rectangular" className="h-2 w-full rounded-full" />
+            ) : (
+              <div className="h-2 w-full bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-primary rounded-full transition-all duration-1000"
+                  style={{ width: `${roadmap.progress_pecent}%` }}
+                ></div>
+              </div>
+            )}
           </div>
         </header>
 
         {/* Timeline Content */}
         <main className="flex-1 overflow-y-auto pb-32 px-4 py-6 space-y-6 no-scrollbar">
-          {(() => {
-            const inProgressIdx =
-              roadmap.phases?.findIndex(
-                (p) => !p.topics.every((t) => t.is_completed),
-              ) ?? -1;
-            const activeOpenIdx =
-              inProgressIdx !== -1
-                ? inProgressIdx
-                : roadmap.phases?.length
-                  ? roadmap.phases.length - 1
-                  : -1;
-            const previousOpenIdx = activeOpenIdx - 1;
+          {loading ? (
+            <div className="space-y-6">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="pl-4 border-l-2 border-slate-200 dark:border-white/5 space-y-4">
+                  <Skeleton variant="rectangular" className="h-20 w-full rounded-xl" />
+                </div>
+              ))}
+            </div>
+          ) : (
+            (() => {
+              const inProgressIdx =
+                roadmap.phases?.findIndex(
+                  (p) => !p.topics.every((t) => t.is_completed),
+                ) ?? -1;
+              const activeOpenIdx =
+                inProgressIdx !== -1
+                  ? inProgressIdx
+                  : roadmap.phases?.length
+                    ? roadmap.phases.length - 1
+                    : -1;
+              const previousOpenIdx = activeOpenIdx - 1;
 
-            return roadmap.phases?.map((phase, idx) => {
-              const isCompleted = phase.topics.every((t) => t.is_completed);
-              const isFirstIncomplete =
-                inProgressIdx !== -1 ? idx === inProgressIdx : false;
-              const isLocked = !isCompleted && !isFirstIncomplete;
-              const isOpen = idx === activeOpenIdx || idx === previousOpenIdx;
+              return roadmap.phases?.map((phase, idx) => {
+                const isCompleted = phase.topics.every((t) => t.is_completed);
+                const isFirstIncomplete =
+                  inProgressIdx !== -1 ? idx === inProgressIdx : false;
+                const isLocked = !isCompleted && !isFirstIncomplete;
+                const isOpen = idx === activeOpenIdx || idx === previousOpenIdx;
 
-              return (
-                <div
-                  key={phase.id}
-                  className={`relative pl-4 border-l-2 ${isLocked ? "border-slate-200 dark:border-white/5" : "border-primary/30"}`}
-                >
-                  {/* Timeline Dot */}
-                  {isFirstIncomplete ? (
-                    <span className="absolute -left-[9px] top-0 flex h-4 w-4">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-4 w-4 bg-primary border-2 border-white dark:border-slate-900"></span>
-                    </span>
-                  ) : (
-                    <div
-                      className={`absolute -left-[9px] top-0 w-4 h-4 rounded-full border-2 border-white dark:border-slate-900 ${isCompleted ? "bg-primary" : "bg-slate-200 dark:bg-slate-800"}`}
-                    ></div>
-                  )}
-
-                  <details
-                    className={`group bg-white dark:bg-slate-950/40 rounded-xl shadow-sm border border-slate-200/60 dark:border-white/5 overflow-hidden ${isFirstIncomplete ? "ring-2 ring-primary/20 bg-primary/5 dark:bg-primary/5" : ""}`}
-                    open={isOpen}
+                return (
+                  <div
+                    key={phase.id}
+                    className={`relative pl-4 border-l-2 ${isLocked ? "border-slate-200 dark:border-white/5" : "border-primary/30"}`}
                   >
-                    <summary className="list-none cursor-pointer p-4 flex items-center justify-between outline-none">
-                      <div className="flex flex-col">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span
-                            className={`text-[10px] font-black uppercase tracking-widest ${isLocked ? "text-slate-400" : "text-primary"}`}
-                          >
-                            Phase {phase.order}
-                          </span>
-                          {isCompleted && (
-                            <span className="material-symbols-outlined text-green-500 text-sm font-bold">
-                              check_circle
-                            </span>
-                          )}
-                          {isFirstIncomplete && (
-                            <span className="bg-primary/10 text-primary px-2 py-0.5 rounded text-[10px] font-black">
-                              IN PROGRESS
-                            </span>
-                          )}
-                          {isLocked && (
-                            <span className="material-symbols-outlined text-slate-400 text-sm">
-                              lock
-                            </span>
-                          )}
-                        </div>
-                        <h3
-                          className={`font-bold text-lg leading-tight ${isLocked ? "text-slate-400" : ""}`}
-                        >
-                          {phase.phase_title}
-                        </h3>
-                      </div>
-                      <span className="material-symbols-outlined text-slate-400 transition-transform group-open:rotate-180">
-                        expand_more
+                    {/* Timeline Dot */}
+                    {isFirstIncomplete ? (
+                      <span className="absolute -left-[9px] top-0 flex h-4 w-4">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-4 w-4 bg-primary border-2 border-white dark:border-slate-900"></span>
                       </span>
-                    </summary>
+                    ) : (
+                      <div
+                        className={`absolute -left-[9px] top-0 w-4 h-4 rounded-full border-2 border-white dark:border-slate-900 ${isCompleted ? "bg-primary" : "bg-slate-200 dark:bg-slate-800"}`}
+                      ></div>
+                    )}
 
-                    <div className="px-4 pb-4 pt-0 border-t border-slate-100 dark:border-white/5 divide-y divide-slate-50 dark:divide-white/5">
-                      {phase.topics?.map((topic) => (
-                        <div
-                          key={topic.id}
-                          className={`py-4 flex gap-3 transition-colors ${topic.is_completed ? "opacity-60" : ""}`}
-                        >
-                          <div className="relative flex items-start pt-0.5">
-                            <input
-                              type="checkbox"
-                              checked={topic.is_completed}
-                              onChange={() => {
-                                !isLocked && handleCheckToggle(topic.id);
-                              }}
-                              className="peer h-5 w-5 rounded-full border-2 border-slate-300 dark:border-white/10 text-primary focus:ring-0 focus:ring-offset-0 cursor-pointer transition-all"
-                            />
-                          </div>
-                          <div className="flex-1">
-                            <p
-                              className={`text-sm font-bold leading-snug ${topic.is_completed ? "line-through text-slate-500" : "text-slate-800 dark:text-slate-200"}`}
+                    <details
+                      className={`group bg-white dark:bg-slate-950/40 rounded-xl shadow-sm border border-slate-200/60 dark:border-white/5 overflow-hidden ${isFirstIncomplete ? "ring-2 ring-primary/20 bg-primary/5 dark:bg-primary/5" : ""}`}
+                      open={isOpen}
+                    >
+                      <summary className="list-none cursor-pointer p-4 flex items-center justify-between outline-none">
+                        <div className="flex flex-col">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span
+                              className={`text-[10px] font-black uppercase tracking-widest ${isLocked ? "text-slate-400" : "text-primary"}`}
                             >
-                              {topic.topic_title}
-                            </p>
-
-                            {!isLocked && (
-                              <button
-                                onClick={() => navigate(`/roadmap/${params.id}/topic/${topic.id}`)}
-                                className="mt-2 text-xs font-black uppercase tracking-widest text-primary hover:text-primary-dark transition-colors flex items-center gap-1"
-                              >
-                                <span>Baca Materi</span>
-                                <span className="material-symbols-outlined text-[14px]">
-                                  arrow_forward
-                                </span>
-                              </button>
+                              Phase {phase.order}
+                            </span>
+                            {isCompleted && (
+                              <span className="material-symbols-outlined text-green-500 text-sm font-bold">
+                                check_circle
+                              </span>
+                            )}
+                            {isFirstIncomplete && (
+                              <span className="bg-primary/10 text-primary px-2 py-0.5 rounded text-[10px] font-black">
+                                IN PROGRESS
+                              </span>
+                            )}
+                            {isLocked && (
+                              <span className="material-symbols-outlined text-slate-400 text-sm">
+                                lock
+                              </span>
                             )}
                           </div>
-                        </div>
-                      ))}
-
-                      {/* Test me! Button */}
-                      {isCompleted && (
-                        <div className="pt-4 border-t border-slate-100 dark:border-white/5">
-                          <button
-                            onClick={() => handleTestMe(phase.id)}
-                            disabled={isGeneratingQuiz === phase.id}
-                            className="w-full py-3 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2"
+                          <h3
+                            className={`font-bold text-lg leading-tight ${isLocked ? "text-slate-400" : ""}`}
                           >
-                            <span className="material-symbols-outlined text-[20px]">
-                              {isGeneratingQuiz === phase.id ? "sync" : "quiz"}
-                            </span>
-                            {isGeneratingQuiz === phase.id
-                              ? "Preparing Quiz..."
-                              : "Test me!"}
-                          </button>
+                            {phase.phase_title}
+                          </h3>
                         </div>
-                      )}
-                    </div>
-                  </details>
-                </div>
-              );
-            });
-          })()}
+                        <span className="material-symbols-outlined text-slate-400 transition-transform group-open:rotate-180">
+                          expand_more
+                        </span>
+                      </summary>
+
+                      <div className="px-4 pb-4 pt-0 border-t border-slate-100 dark:border-white/5 divide-y divide-slate-50 dark:divide-white/5">
+                        {phase.topics?.map((topic) => (
+                          <div
+                            key={topic.id}
+                            className={`py-4 flex gap-3 transition-colors ${topic.is_completed ? "opacity-60" : ""}`}
+                          >
+                            <div className="relative flex items-start pt-0.5">
+                              <input
+                                type="checkbox"
+                                checked={topic.is_completed}
+                                onChange={() => {
+                                  !isLocked && handleCheckToggle(topic.id);
+                                }}
+                                className="peer h-5 w-5 rounded-full border-2 border-slate-300 dark:border-white/10 text-primary focus:ring-0 focus:ring-offset-0 cursor-pointer transition-all"
+                              />
+                            </div>
+                            <div className="flex-1">
+                              <p
+                                className={`text-sm font-bold leading-snug ${topic.is_completed ? "line-through text-slate-500" : "text-slate-800 dark:text-slate-200"}`}
+                              >
+                                {topic.topic_title}
+                              </p>
+
+                              {!isLocked && (
+                                <button
+                                  onClick={() => navigate(`/roadmap/${params.id}/topic/${topic.id}`)}
+                                  className="mt-2 text-xs font-black uppercase tracking-widest text-primary hover:text-primary-dark transition-colors flex items-center gap-1"
+                                >
+                                  <span>Baca Materi</span>
+                                  <span className="material-symbols-outlined text-[14px]">
+                                    arrow_forward
+                                  </span>
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+
+                        {/* Test me! Button */}
+                        {isCompleted && (
+                          <div className="pt-4 border-t border-slate-100 dark:border-white/5">
+                            <button
+                              onClick={() => handleTestMe(phase.id)}
+                              disabled={isGeneratingQuiz === phase.id}
+                              className="w-full py-3 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2"
+                            >
+                              <span className="material-symbols-outlined text-[20px]">
+                                {isGeneratingQuiz === phase.id ? "sync" : "quiz"}
+                              </span>
+                              {isGeneratingQuiz === phase.id
+                                ? "Preparing Quiz..."
+                                : "Test me!"}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </details>
+                  </div>
+                );
+              });
+            })()
+          )}
 
           {/* Celebration & Feedback Button */}
-          {Math.round(roadmap.progress_pecent) === 100 && (
+          {!loading && Math.round(roadmap.progress_pecent) === 100 && (
             <div className="pt-4 animate-in fade-in slide-in-from-bottom duration-700">
               <div className="bg-gradient-to-br from-primary to-purple-600 rounded-3xl p-6 text-white shadow-xl shadow-primary/20 relative overflow-hidden group">
                 <div className="absolute top-0 right-0 -mr-4 -mt-4 h-24 w-24 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>

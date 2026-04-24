@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import AdminBottomBar from "../../components/AdminBottomBar";
 import api from "../../api/api";
+import Skeleton from "../../components/Skeleton";
 
 export default function SkillManage() {
   const [mainTab, setMainTab] = useState("skills"); // 'skills' or 'categories'
@@ -141,7 +142,6 @@ export default function SkillManage() {
     }
   }, [mainTab, search, activeFilter]);
 
-  console.log(skillForm)
 
   // Initial fetch for categories even if on skills tab (for dropdown)
   useEffect(() => {
@@ -242,11 +242,25 @@ export default function SkillManage() {
         <main className="flex-1 p-5 pb-28">
           <div className="space-y-4">
             {loading ? (
-              <div className="flex flex-col items-center justify-center py-20 gap-3">
-                <div className="h-8 w-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-                <p className="text-xs font-medium text-slate-400">
-                  Loading data...
-                </p>
+              <div className="space-y-4">
+                {[1, 2, 3, 4, 5].map(i => (
+                  <div key={i} className="bg-white dark:bg-slate-800/40 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <Skeleton variant="rectangular" className="h-4 w-20 rounded-md mb-2" />
+                        <Skeleton variant="text" className="h-5 w-3/4 mb-2" />
+                        <Skeleton variant="text" className="h-3 w-1/2" />
+                      </div>
+                      <div className="flex flex-col items-end gap-2">
+                        <Skeleton variant="rectangular" className="h-5 w-14 rounded-full" />
+                        <div className="flex gap-1">
+                          <Skeleton variant="rectangular" className="h-8 w-8 rounded-lg" />
+                          <Skeleton variant="rectangular" className="h-8 w-8 rounded-lg" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : mainTab === "skills" ? (
               skills.length > 0 ? (
@@ -546,3 +560,4 @@ function EmptyState({ message }) {
     </div>
   );
 }
+

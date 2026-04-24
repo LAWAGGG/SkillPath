@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import api from "../api/api";
 import BottomBar from "../components/BottomBar";
 import { removeToken } from "../utils/uttils";
+import Skeleton from "../components/Skeleton";
 
 export default function Profile() {
   const [user, setUser] = useState(null);
@@ -57,7 +58,9 @@ export default function Profile() {
             <div className="relative mb-4 group">
               <div className="h-24 w-24 rounded-full bg-gradient-to-tr from-primary to-purple-500 p-1 shadow-xl shadow-primary/20">
                 <div className="h-full w-full rounded-full bg-white dark:bg-slate-900 flex items-center justify-center overflow-hidden border-4 border-white dark:border-slate-900">
-                  {user?.name ? (
+                  {loading ? (
+                    <Skeleton variant="circular" className="h-full w-full" />
+                  ) : user?.name ? (
                     <span className="text-3xl font-black text-primary uppercase">
                       {user.name.charAt(0)}
                     </span>
@@ -70,9 +73,10 @@ export default function Profile() {
               </div>
             </div>
             {loading ? (
-              <div className="space-y-2 flex flex-col items-center">
-                <div className="h-6 w-32 bg-slate-200 dark:bg-slate-800 animate-pulse rounded-full"></div>
-                <div className="h-4 w-48 bg-slate-100 dark:bg-slate-800/50 animate-pulse rounded-full"></div>
+              <div className="space-y-3 flex flex-col items-center">
+                <Skeleton variant="text" className="h-8 w-40" />
+                <Skeleton variant="text" className="h-4 w-56" />
+                <Skeleton variant="rectangular" className="h-6 w-20 rounded-full mt-2" />
               </div>
             ) : (
               <>

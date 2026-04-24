@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import AdminBottomBar from "../../components/AdminBottomBar";
 import api from "../../api/api";
+import Skeleton from "../../components/Skeleton";
 
 export default function RoadmapManage() {
   const [roadmaps, setRoadmaps] = useState([]);
@@ -10,7 +11,6 @@ export default function RoadmapManage() {
     setLoading(true);
     api.get("/admin/roadmaps").then((res) => {
       setRoadmaps(res.data.data);
-      console.log(res.data.data);
       setLoading(false);
     });
   }
@@ -46,8 +46,29 @@ export default function RoadmapManage() {
           <div className="bg-white dark:bg-slate-800/30 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm">
             <div className="divide-y divide-slate-50 dark:divide-white/5">
               {loading ? (
-                <div className="p-10 text-center text-slate-500">
-                  Loading...
+                <div className="divide-y divide-slate-50 dark:divide-white/5">
+                  {[1, 2, 3, 4, 5].map(i => (
+                    <div key={i} className="p-5 flex flex-col gap-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <Skeleton variant="rectangular" className="h-4 w-20 rounded-md mb-2" />
+                          <Skeleton variant="text" className="h-5 w-3/4" />
+                        </div>
+                        <Skeleton variant="rectangular" className="h-5 w-14 rounded-full" />
+                      </div>
+                      <div className="flex items-center justify-between mt-1">
+                        <div className="flex items-center gap-2">
+                          <Skeleton variant="circular" className="h-6 w-6" />
+                          <Skeleton variant="text" className="h-3 w-20" />
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Skeleton variant="text" className="h-3 w-8" />
+                          <Skeleton variant="text" className="h-3 w-8" />
+                        </div>
+                      </div>
+                      <Skeleton variant="rectangular" className="h-1 w-full rounded-full" />
+                    </div>
+                  ))}
                 </div>
               ) : roadmaps.length > 0 ? (
                 roadmaps.map((roadmap, idx) => (

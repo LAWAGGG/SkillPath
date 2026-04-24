@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../api/api";
 import BottomBar from "../components/BottomBar";
+import Skeleton from "../components/Skeleton";
 
 export default function FeedbackPage() {
   const navigate = useNavigate();
@@ -28,7 +29,6 @@ export default function FeedbackPage() {
       .then((res) => {
         setFeedbacks(res.data.data);
         setLoading(false);
-        console.log(res.data.data);
       })
       .catch((err) => {
         console.error(err);
@@ -55,7 +55,6 @@ export default function FeedbackPage() {
 
   useEffect(() => {
     fetchFeedbacks();
-
   }, []);
 
   useEffect(() => {
@@ -67,15 +66,6 @@ export default function FeedbackPage() {
     }
     return () => clearInterval(interval);
   }, [isGenerating]);
-
-  if (loading) {
-    return (
-      <div className="bg-background-light dark:bg-background-dark min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-primary"></div>
-      </div>
-    );
-  }
-
 
   return (
     <div className="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen relative overflow-hidden">
@@ -96,7 +86,27 @@ export default function FeedbackPage() {
         </header>
 
         <main className="flex-1 overflow-y-auto pb-32 px-4 py-6 space-y-8 no-scrollbar">
-          {feedbacks.length === 0 ? (
+          {loading ? (
+            <div className="space-y-8 animate-in fade-in duration-500">
+              <Skeleton variant="rectangular" className="h-48 w-full rounded-[32px]" />
+              <Skeleton variant="rectangular" className="h-14 w-full rounded-2xl" />
+              <div className="space-y-6">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="bg-white dark:bg-slate-900/40 rounded-3xl p-6 border border-slate-100 dark:border-white/5 space-y-4">
+                    <div className="flex items-center gap-3">
+                      <Skeleton variant="rectangular" className="h-10 w-10 rounded-xl" />
+                      <Skeleton variant="text" className="h-4 w-32" />
+                    </div>
+                    <div className="space-y-2">
+                      <Skeleton variant="text" className="h-3 w-full" />
+                      <Skeleton variant="text" className="h-3 w-full" />
+                      <Skeleton variant="text" className="h-3 w-2/3" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : feedbacks.length === 0 ? (
             <div className="py-20 text-center">
               <div className="h-24 w-24 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
                 <span className="material-symbols-outlined text-primary text-[40px]">
