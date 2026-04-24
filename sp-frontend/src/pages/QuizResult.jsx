@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../api/api";
+import Skeleton from "../components/Skeleton";
 
 export default function QuizResult() {
   const navigate = useNavigate();
@@ -28,8 +29,35 @@ export default function QuizResult() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background-light dark:bg-background-dark flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-primary border-solid"></div>
+      <div className="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen relative overflow-hidden flex justify-center">
+        <div className="relative mx-auto flex h-full min-h-screen w-full max-w-md flex-col bg-background-light dark:bg-background-dark shadow-2xl">
+          <header className="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/50 dark:border-white/5 pt-4 pb-4 px-4 shadow-sm flex items-center gap-3">
+            <Skeleton variant="circular" className="h-10 w-10" />
+            <Skeleton variant="text" className="h-6 w-32" />
+          </header>
+          <main className="flex-1 overflow-y-auto p-4 flex flex-col no-scrollbar space-y-8">
+            <Skeleton variant="rectangular" className="mt-4 h-40 w-full rounded-3xl" />
+            <div className="space-y-6">
+              <Skeleton variant="text" className="h-6 w-40 ml-2" />
+              {[1, 2, 3].map(i => (
+                <div key={i} className="p-5 rounded-2xl border border-slate-200/50 dark:border-white/5 space-y-4">
+                  <div className="flex gap-3">
+                    <Skeleton variant="circular" className="h-8 w-8 shrink-0" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton variant="text" className="h-5 w-full" />
+                      <Skeleton variant="text" className="h-5 w-4/5" />
+                    </div>
+                  </div>
+                  <div className="space-y-2 mt-4">
+                    {[1, 2, 3, 4].map(j => (
+                      <Skeleton key={j} variant="rectangular" className="h-10 w-full rounded-xl" />
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </main>
+        </div>
       </div>
     );
   }

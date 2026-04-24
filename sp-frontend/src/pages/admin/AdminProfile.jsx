@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../../api/api";
 import AdminBottomBar from "../../components/AdminBottomBar";
 import { removeToken } from "../../utils/uttils";
+import Skeleton from "../../components/Skeleton";
 
 export default function AdminProfile() {
   const [user, setUser] = useState(null);
@@ -61,7 +62,9 @@ export default function AdminProfile() {
             <div className="relative mb-6 group">
               <div className="h-28 w-28 rounded-3xl bg-gradient-to-tr from-primary to-blue-500 p-1 shadow-2xl shadow-primary/20 rotate-3 group-hover:rotate-0 transition-transform duration-500">
                 <div className="h-full w-full rounded-[20px] bg-white dark:bg-slate-900 flex items-center justify-center overflow-hidden border-4 border-white dark:border-slate-900 -rotate-3 group-hover:rotate-0 transition-transform duration-500">
-                  {user?.name ? (
+                  {loading ? (
+                    <Skeleton variant="rectangular" className="h-full w-full" />
+                  ) : user?.name ? (
                     <span className="text-4xl font-black text-primary uppercase">
                       {user.name.charAt(0)}
                     </span>
@@ -81,8 +84,9 @@ export default function AdminProfile() {
 
             {loading ? (
               <div className="space-y-3 flex flex-col items-center">
-                <div className="h-7 w-40 bg-slate-100 dark:bg-slate-800 animate-pulse rounded-xl"></div>
-                <div className="h-4 w-52 bg-slate-50 dark:bg-slate-800/50 animate-pulse rounded-xl"></div>
+                <Skeleton variant="text" className="h-8 w-40" />
+                <Skeleton variant="text" className="h-4 w-52" />
+                <Skeleton variant="rectangular" className="h-7 w-28 rounded-full mt-2" />
               </div>
             ) : (
               <>
@@ -105,48 +109,61 @@ export default function AdminProfile() {
           </div>
 
           {/* Actions Group */}
-          <div className="space-y-4">
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 ml-1">
-                Account Permissions
-              </h3>
-              <div className="space-y-3">
-                <div className="flex items-center gap-3 text-slate-600 dark:text-slate-300">
-                  <span className="material-symbols-outlined text-emerald-500">
-                    check_circle
-                  </span>
-                  <span className="text-sm font-medium">
-                    Manage all skills & categories
-                  </span>
-                </div>
-                <div className="flex items-center gap-3 text-slate-600 dark:text-slate-300">
-                  <span className="material-symbols-outlined text-emerald-500">
-                    check_circle
-                  </span>
-                  <span className="text-sm font-medium">
-                    Moderate platform users
-                  </span>
-                </div>
-                <div className="flex items-center gap-3 text-slate-600 dark:text-slate-300">
-                  <span className="material-symbols-outlined text-emerald-500">
-                    check_circle
-                  </span>
-                  <span className="text-sm font-medium">
-                    View platform analytics
-                  </span>
-                </div>
+          <div className="space-y-6">
+            <div className="bg-slate-50/50 dark:bg-slate-800/30 rounded-[32px] p-6 border border-slate-100 dark:border-white/5 shadow-inner">
+              <div className="flex items-center gap-2 mb-6">
+                <div className="h-6 w-1 bg-primary rounded-full"></div>
+                <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">
+                  Privileges
+                </h3>
+              </div>
+
+              <div className="space-y-4">
+                {[
+                  {
+                    icon: "schema",
+                    text: "Master Access: Skills & Topics",
+                    color: "text-blue-500",
+                  },
+                  {
+                    icon: "group_work",
+                    text: "User Lifecycle Moderation",
+                    color: "text-purple-500",
+                  },
+                  {
+                    icon: "monitoring",
+                    text: "Full Platform Analytics",
+                    color: "text-emerald-500",
+                  },
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center gap-4 group">
+                    <div
+                      className={`h-10 w-10 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 flex items-center justify-center ${item.color} shadow-sm group-hover:scale-110 transition-transform`}
+                    >
+                      <span className="material-symbols-outlined text-[20px]">
+                        {item.icon}
+                      </span>
+                    </div>
+                    <span className="text-sm font-bold text-slate-600 dark:text-slate-300">
+                      {item.text}
+                    </span>
+                  </div>
+                ))}
               </div>
             </div>
 
-            <button
-              onClick={handleLogout}
-              className="flex w-full items-center justify-center gap-3 p-4 rounded-2xl bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-500/20 font-black text-sm active:scale-95 transition-all shadow-sm shadow-red-500/5"
-            >
-              <span className="material-symbols-outlined text-[20px]">
-                logout
-              </span>
-              Logout from Admin Panel
-            </button>
+            <div className="relative group">
+              <div className="absolute inset-0 bg-red-500/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <button
+                onClick={handleLogout}
+                className="relative flex w-full items-center justify-center gap-3 p-5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-red-500/20 text-red-600 dark:text-red-400 font-black text-sm shadow-xl shadow-red-500/5 active:scale-95 transition-all"
+              >
+                <span className="material-symbols-outlined font-bold">
+                  power_settings_new
+                </span>
+                Terminate Session
+              </button>
+            </div>
           </div>
         </main>
 

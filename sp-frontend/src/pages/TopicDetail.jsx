@@ -5,6 +5,7 @@ import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { atomDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import remarkGfm from "remark-gfm";
 import api from "../api/api";
+import Skeleton from "../components/Skeleton";
 
 export default function TopicDetail() {
   const { roadmapId, topicId } = useParams();
@@ -56,7 +57,7 @@ export default function TopicDetail() {
               </h1>
             </div>
             <div className="w-10 flex justify-center">
-                {topic?.is_completed && (
+                {topic?.is_completed && !loading && (
                     <span className="material-symbols-outlined text-green-500 bg-green-500/10 p-1.5 rounded-full">
                         check
                     </span>
@@ -67,8 +68,19 @@ export default function TopicDetail() {
 
         <main className="flex-1 overflow-y-auto px-6 pt-6 pb-32 no-scrollbar">
           {loading ? (
-            <div className="flex items-center justify-center h-48">
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+            <div className="space-y-6">
+              <Skeleton variant="text" className="h-10 w-3/4 mb-10" />
+              <div className="space-y-4">
+                <Skeleton variant="text" className="h-4 w-full" />
+                <Skeleton variant="text" className="h-4 w-full" />
+                <Skeleton variant="text" className="h-4 w-5/6" />
+                <Skeleton variant="text" className="h-4 w-full" />
+                <Skeleton variant="text" className="h-4 w-4/6" />
+              </div>
+              <div className="pt-10 space-y-4">
+                <Skeleton variant="rectangular" className="h-20 w-full rounded-2xl" />
+                <Skeleton variant="rectangular" className="h-20 w-full rounded-2xl" />
+              </div>
             </div>
           ) : topic ? (
             <>
@@ -133,7 +145,7 @@ export default function TopicDetail() {
                         href={res.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-4 p-4 rounded-2xl bg-background-light dark:bg-background-dark border border-slate-200/50 dark:border-white/5 hover:border-primary/30 transition-all hover:shadow-lg hover:shadow-primary/5 group"
+                        className="flex items-center w-100 gap-4 p-4 rounded-2xl bg-background-light dark:bg-background-dark border border-slate-200/50 dark:border-white/5 hover:border-primary/30 transition-all hover:shadow-lg hover:shadow-primary/5 group"
                       >
                         <div
                           className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 shadow-inner ${

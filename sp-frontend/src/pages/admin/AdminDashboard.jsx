@@ -2,17 +2,20 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminBottomBar from "../../components/AdminBottomBar";
 import api from "../../api/api";
+import Skeleton from "../../components/Skeleton";
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("users");
   const [dashboardItem, setDashboardItem] = useState({})
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   async function fetchDashboard() {
+    setLoading(true);
     api.get("/admin/dashboard").then((res)=>{
         setDashboardItem(res.data)
-        console.log(res.data)
-    })
+        setLoading(false);
+    }).catch(() => setLoading(false));
   }
 
   useEffect(()=>{
@@ -52,78 +55,92 @@ export default function AdminDashboard() {
               </h2>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              {/* Stat Card 1 */}
-              <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 flex flex-col gap-3">
-                <div className="flex items-center justify-between">
-                  <div className="h-8 w-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-                    <span className="material-symbols-outlined text-[20px]">
-                      group
-                    </span>
+              {loading ? (
+                [1, 2, 3, 4].map(i => (
+                  <div key={i} className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 flex flex-col gap-3">
+                    <Skeleton variant="rectangular" className="h-8 w-8 rounded-lg" />
+                    <div>
+                      <Skeleton variant="text" className="h-8 w-12 mb-1" />
+                      <Skeleton variant="text" className="h-3 w-20" />
+                    </div>
                   </div>
-                </div>
-                <div>
-                  <p className="text-2xl font-black text-slate-900 dark:text-white">
-                    {dashboardItem.total_users}
-                  </p>
-                  <p className="text-[11px] font-medium text-slate-500 mt-0.5">
-                    Total Registered Users
-                  </p>
-                </div>
-              </div>
-              {/* Stat Card 2 */}
-              <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 flex flex-col gap-3">
-                <div className="flex items-center justify-between">
-                  <div className="h-8 w-8 rounded-lg bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 flex items-center justify-center">
-                    <span className="material-symbols-outlined text-[20px]">
-                      bolt
-                    </span>
+                ))
+              ) : (
+                <>
+                  {/* Stat Card 1 */}
+                  <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                      <div className="h-8 w-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                        <span className="material-symbols-outlined text-[20px]">
+                          group
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-2xl font-black text-slate-900 dark:text-white">
+                        {dashboardItem.total_users}
+                      </p>
+                      <p className="text-[11px] font-medium text-slate-500 mt-0.5">
+                        Total Registered Users
+                      </p>
+                    </div>
                   </div>
-                </div>
-                <div>
-                  <p className="text-2xl font-black text-slate-900 dark:text-white">
-                    {dashboardItem.active_learner}
-                  </p>
-                  <p className="text-[11px] font-medium text-slate-500 mt-0.5">
-                    Active Learners Today
-                  </p>
-                </div>
-              </div>
-              {/* Stat Card 3 */}
-              <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 flex flex-col gap-3">
-                <div className="flex items-center justify-between">
-                  <div className="h-8 w-8 rounded-lg bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-                    <span className="material-symbols-outlined text-[20px]">
-                      map
-                    </span>
+                  {/* Stat Card 2 */}
+                  <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                      <div className="h-8 w-8 rounded-lg bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 flex items-center justify-center">
+                        <span className="material-symbols-outlined text-[20px]">
+                          bolt
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-2xl font-black text-slate-900 dark:text-white">
+                        {dashboardItem.active_learner}
+                      </p>
+                      <p className="text-[11px] font-medium text-slate-500 mt-0.5">
+                        Active Learners Today
+                      </p>
+                    </div>
                   </div>
-                </div>
-                <div>
-                  <p className="text-2xl font-black text-slate-900 dark:text-white">
-                    {dashboardItem.total_roadmaps}
-                  </p>
-                  <p className="text-[11px] font-medium text-slate-500 mt-0.5">
-                    Total Roadmaps Created
-                  </p>
-                </div>
-              </div>
-              {/* Stat Card 4 */}
-              <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 flex flex-col gap-3">
-                <div className="flex items-center justify-between">
-                  <div className="h-8 w-8 rounded-lg bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 flex items-center justify-center">
-                    <span className="material-symbols-outlined text-[20px]">
-                      verified
-                    </span>
+                  {/* Stat Card 3 */}
+                  <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                      <div className="h-8 w-8 rounded-lg bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                        <span className="material-symbols-outlined text-[20px]">
+                          map
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-2xl font-black text-slate-900 dark:text-white">
+                        {dashboardItem.total_roadmaps}
+                      </p>
+                      <p className="text-[11px] font-medium text-slate-500 mt-0.5">
+                        Total Roadmaps Created
+                      </p>
+                    </div>
                   </div>
-                </div>
-                <div>
-                  <p className="text-2xl font-black text-slate-900 dark:text-white">
-                    {Math.round(dashboardItem.completed_roadmaps / dashboardItem.total_roadmaps * 100)}%
-                  </p>
-                  <p className="text-[11px] font-medium text-slate-500 mt-0.5">
-                    Completed Roadmaps
-                  </p>
-                </div>
-              </div>
+                  {/* Stat Card 4 */}
+                  <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                      <div className="h-8 w-8 rounded-lg bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 flex items-center justify-center">
+                        <span className="material-symbols-outlined text-[20px]">
+                          verified
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-2xl font-black text-slate-900 dark:text-white">
+                        {Math.round(dashboardItem.completed_roadmaps / dashboardItem.total_roadmaps * 100) || 0}%
+                      </p>
+                      <p className="text-[11px] font-medium text-slate-500 mt-0.5">
+                        Completed Roadmaps
+                      </p>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </section>
 
@@ -158,7 +175,22 @@ export default function AdminDashboard() {
             </div>
 
             <div className="bg-white dark:bg-slate-800/30 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm">
-              {activeTab === "users" ? (
+              {loading ? (
+                <div className="divide-y divide-slate-50 dark:divide-white/5">
+                  {[1, 2, 3, 4].map(i => (
+                    <div key={i} className="p-4 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Skeleton variant="circular" className="h-10 w-10" />
+                        <div>
+                          <Skeleton variant="text" className="h-4 w-24 mb-1" />
+                          <Skeleton variant="text" className="h-3 w-16" />
+                        </div>
+                      </div>
+                      <Skeleton variant="text" className="h-4 w-8" />
+                    </div>
+                  ))}
+                </div>
+              ) : activeTab === "users" ? (
                 <div className="divide-y divide-slate-50 dark:divide-white/5">
                  {dashboardItem.top_user?.map((user, idx) => (
                     <div
@@ -232,7 +264,7 @@ export default function AdminDashboard() {
               )}
               <div className="p-4 bg-slate-50/50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800">
                 <button onClick={()=>activeTab == 'users' ? navigate('/admin/users') : navigate('/admin/roadmaps')} className="w-full py-2.5 bg-white dark:bg-slate-800 text-[11px] font-bold text-slate-700 dark:text-slate-300 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm active:scale-95 transition-all">
-                  Load More Activity
+                  View All {activeTab === 'users' ? 'Users' : 'Roadmaps'}
                 </button>
               </div>
             </div>

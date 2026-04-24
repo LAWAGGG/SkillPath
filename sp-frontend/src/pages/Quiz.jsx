@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../api/api";
+import Skeleton from "../components/Skeleton";
 
 export default function Quiz() {
   const navigate = useNavigate();
@@ -84,8 +85,37 @@ export default function Quiz() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background-light dark:bg-background-dark flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-primary border-solid"></div>
+      <div className="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen relative overflow-hidden flex justify-center">
+        <div className="relative mx-auto flex h-full min-h-screen w-full max-w-md flex-col bg-background-light dark:bg-background-dark shadow-2xl">
+          <header className="bg-white/90 dark:bg-slate-900/90 py-6 px-4 space-y-4 border-b border-slate-200/50 dark:border-white/5">
+            <div className="flex items-center gap-3">
+              <Skeleton variant="circular" className="h-10 w-10" />
+              <Skeleton variant="text" className="h-6 w-32" />
+            </div>
+            <div className="space-y-2 mt-4">
+              <div className="flex justify-between items-center">
+                <Skeleton variant="text" className="h-3 w-24" />
+                <Skeleton variant="text" className="h-3 w-8" />
+              </div>
+              <Skeleton variant="rectangular" className="h-2 w-full rounded-full" />
+            </div>
+          </header>
+          <main className="p-6 space-y-8 flex-1 flex flex-col">
+            <div className="space-y-3">
+              <Skeleton variant="text" className="h-10 w-full" />
+              <Skeleton variant="text" className="h-8 w-2/3" />
+            </div>
+            <div className="space-y-4 pt-4">
+              {[1, 2, 3, 4].map(i => (
+                <Skeleton key={i} variant="rectangular" className="h-14 w-full rounded-2xl" />
+              ))}
+            </div>
+            <div className="flex gap-4 mt-auto pt-8">
+              <Skeleton variant="rectangular" className="h-14 flex-1 rounded-2xl" />
+              <Skeleton variant="rectangular" className="h-14 flex-1 rounded-2xl" />
+            </div>
+          </main>
+        </div>
       </div>
     );
   }

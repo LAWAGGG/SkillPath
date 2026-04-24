@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import api from "../api/api";
 import BottomBar from "../components/BottomBar";
+import Skeleton from "../components/Skeleton";
 
 export default function Search() {
   const [searchParams] = useSearchParams();
@@ -14,20 +15,24 @@ export default function Search() {
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [activeCategory, setActiveCategory] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loadingCats, setLoadingCats] = useState(true);
 
-  // Fetch Categories
+  // Fetch Categories & Recommendations
   useEffect(() => {
-    api.get("/skill-categories").then((res) => {
+    setLoadingCats(true);
+    const catPromise = api.get("/skill-categories").then((res) => {
       if (res.data.success) {
         setCategories(res.data.data);
       }
     });
 
-    api.get("/skills/recommendation").then((res) => {
+    const recPromise = api.get("/skills/recommendation").then((res) => {
       if (res.data.success) {
         setRecommendations(res.data.data);
       }
     });
+
+    Promise.all([catPromise, recPromise]).finally(() => setLoadingCats(false));
   }, []);
 
   // Initial search if query param exists
@@ -105,28 +110,40 @@ export default function Search() {
 
           {/* Category Scroll */}
           <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 -mx-4 px-4">
-            <button
-              onClick={() => handleCategoryClick("")}
-              className={`flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-bold transition-all border ${!activeCategory ? "bg-primary text-white border-primary shadow-lg shadow-primary/20" : "bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200/50 dark:border-white/5"}`}
-            >
-              All
-            </button>
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => handleCategoryClick(cat.slug)}
-                className={`flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-bold transition-all border ${activeCategory === cat.slug ? "bg-primary text-white border-primary shadow-lg shadow-primary/20" : "bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200/50 dark:border-white/5"}`}
-              >
-                {cat.name}
-              </button>
-            ))}
+            {loadingCats ? (
+              [1, 2, 3, 4].map((i) => (
+                <Skeleton
+                  key={i}
+                  variant="rectangular"
+                  className="h-8 w-20 rounded-full shrink-0"
+                />
+              ))
+            ) : (
+              <>
+                <button
+                  onClick={() => handleCategoryClick("")}
+                  className={`flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-bold transition-all border ${!activeCategory ? "bg-primary text-white border-primary shadow-lg shadow-primary/20" : "bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200/50 dark:border-white/5"}`}
+                >
+                  All
+                </button>
+                {categories.map((cat) => (
+                  <button
+                    key={cat.id}
+                    onClick={() => handleCategoryClick(cat.slug)}
+                    className={`flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-bold transition-all border ${activeCategory === cat.slug ? "bg-primary text-white border-primary shadow-lg shadow-primary/20" : "bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200/50 dark:border-white/5"}`}
+                  >
+                    {cat.name}
+                  </button>
+                ))}
+              </>
+            )}
           </div>
         </header>
 
         {/* Main Content */}
         <main className="flex-1 px-4 pb-24 pt-6 overflow-y-auto no-scrollbar">
-          {/* Recommendations Section (Only show if not searching or if query is empty) */}
-          {!searchQuery && !activeCategory && recommendations.length > 0 && (
+          {/* Recommendations Section */}
+          {(!searchQuery && !activeCategory) && (
             <div className="mb-10">
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-lg font-bold tracking-tight">
@@ -137,34 +154,49 @@ export default function Search() {
                 </span>
               </div>
               <div className="flex gap-4 overflow-x-auto no-scrollbar -mx-4 px-4 pb-2">
-                {recommendations.map((item) => (
-                  <div
-                    key={item.id}
-                    onClick={() => handleSkillSelect(item)}
-                    className="flex-shrink-0 w-64 p-5 rounded-2xl bg-gradient-to-br from-white to-slate-50 dark:from-slate-900/40 dark:to-slate-900/20 border border-slate-200/60 dark:border-white/5 shadow-sm hover:shadow-md cursor-pointer group transition-all"
-                  >
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary mb-4 group-hover:scale-110 transition-transform shadow-inner">
-                      <span
-                        className="material-symbols-outlined"
-                        style={{ fontSize: "24px" }}
-                      >
-                        stars
-                      </span>
+                {loadingCats ? (
+                  [1, 2].map((i) => (
+                    <div
+                      key={i}
+                      className="flex-shrink-0 w-64 p-5 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200/60 dark:border-white/5 shadow-sm"
+                    >
+                      <Skeleton variant="rectangular" className="h-12 w-12 rounded-xl mb-4" />
+                      <Skeleton variant="text" className="h-5 w-3/4 mb-2" />
+                      <Skeleton variant="text" className="h-3 w-full mb-1" />
+                      <Skeleton variant="text" className="h-3 w-1/2 mb-4" />
+                      <Skeleton variant="text" className="h-3 w-2/3" />
                     </div>
-                    <h3 className="font-bold text-slate-900 dark:text-white mb-1 group-hover:text-primary transition-colors">
-                      {item.name}
-                    </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mb-4 leading-relaxed">
-                      {item.description}
-                    </p>
-                    <div className="flex items-center gap-2 text-[10px] font-extrabold text-primary uppercase tracking-widest">
-                      <span className="material-symbols-outlined text-[14px]">
-                        map
-                      </span>
-                      {item.roadmaps_count} Roadmaps generated
+                  ))
+                ) : (
+                  recommendations.map((item) => (
+                    <div
+                      key={item.id}
+                      onClick={() => handleSkillSelect(item)}
+                      className="flex-shrink-0 w-64 p-5 rounded-2xl bg-gradient-to-br from-white to-slate-50 dark:from-slate-900/40 dark:to-slate-900/20 border border-slate-200/60 dark:border-white/5 shadow-sm hover:shadow-md cursor-pointer group transition-all"
+                    >
+                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary mb-4 group-hover:scale-110 transition-transform shadow-inner">
+                        <span
+                          className="material-symbols-outlined"
+                          style={{ fontSize: "24px" }}
+                        >
+                          stars
+                        </span>
+                      </div>
+                      <h3 className="font-bold text-slate-900 dark:text-white mb-1 group-hover:text-primary transition-colors">
+                        {item.name}
+                      </h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mb-4 leading-relaxed">
+                        {item.description}
+                      </p>
+                      <div className="flex items-center gap-2 text-[10px] font-extrabold text-primary uppercase tracking-widest">
+                        <span className="material-symbols-outlined text-[14px]">
+                          map
+                        </span>
+                        {item.roadmaps_count} Roadmaps generated
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
           )}
@@ -177,11 +209,25 @@ export default function Search() {
           </div>
 
           {loading ? (
-            <div className="flex flex-col items-center justify-center py-20 gap-4">
-              <div className="h-10 w-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                Searching...
-              </p>
+            <div className="grid gap-4">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div
+                  key={i}
+                  className="flex items-center justify-between p-4 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200/60 dark:border-white/5"
+                >
+                  <div className="flex items-center gap-4">
+                    <Skeleton
+                      variant="rectangular"
+                      className="h-12 w-12 rounded-xl"
+                    />
+                    <div>
+                      <Skeleton variant="text" className="h-5 w-32 mb-1" />
+                      <Skeleton variant="text" className="h-3 w-20" />
+                    </div>
+                  </div>
+                  <Skeleton variant="circular" className="h-8 w-8" />
+                </div>
+              ))}
             </div>
           ) : skills.length > 0 ? (
             <div className="grid gap-4">
