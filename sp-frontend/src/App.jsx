@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import reactLogo from "./assets/react.svg";
 import viteLogo from "/vite.svg";
 import "./App.css";
@@ -22,8 +22,15 @@ import Quiz from "./pages/Quiz";
 import QuizResult from "./pages/QuizResult";
 import TopicDetail from "./pages/TopicDetail";
 import { getRole, getToken } from "./utils/uttils";
+import { setNavigate } from "./api/api";
 
 function App() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    setNavigate(navigate);
+  }, [navigate]);
+
   function RedirectRoute({ children }) {
     const token = getToken();
     const role = getRole();
