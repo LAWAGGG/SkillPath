@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import reactLogo from "./assets/react.svg";
 import viteLogo from "/vite.svg";
-import "./App.css";
 import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -24,12 +23,59 @@ import TopicDetail from "./pages/TopicDetail";
 import { getRole, getToken } from "./utils/uttils";
 import { setNavigate } from "./api/api";
 
+function useScrollDirection() {
+  useEffect(() => {
+    let lastScrollY = window.scrollY;
+
+    const updateScrollDirection = () => {
+      const scrollY = window.scrollY;
+      const direction = scrollY > lastScrollY ? "down" : "up";
+
+      if (Math.abs(scrollY - lastScrollY) > 5) {
+        if (direction === "down" && scrollY > 50) {
+          document.body.classList.add("scroll-down");
+          document.body.classList.remove("scroll-up");
+        } else if (direction === "up") {
+          document.body.classList.add("scroll-up");
+          document.body.classList.remove("scroll-down");
+        }
+      }
+
+      if (scrollY <= 10) {
+        document.body.classList.remove("scroll-down");
+        document.body.classList.add("scroll-up");
+      }
+
+      lastScrollY = scrollY > 0 ? scrollY : 0;
+    };
+
+    window.addEventListener("scroll", updateScrollDirection, { passive: true });
+    return () => window.removeEventListener("scroll", updateScrollDirection);
+  }, []);
+}
+
 function App() {
   const navigate = useNavigate();
+  useScrollDirection();
 
   useEffect(() => {
     setNavigate(navigate);
   }, [navigate]);
+
+  useEffect(() => {
+    // Load App Settings
+    const theme = localStorage.getItem('theme');
+    if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+
+    const fontSize = localStorage.getItem('fontSize');
+    if (fontSize) {
+      document.documentElement.style.fontSize = fontSize;
+    }
+  }, []);
 
   function RedirectRoute({ children }) {
     const token = getToken();

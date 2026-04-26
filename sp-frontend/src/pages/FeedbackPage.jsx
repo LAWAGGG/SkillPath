@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../api/api";
-import BottomBar from "../components/BottomBar";
 import Skeleton from "../components/Skeleton";
+import MainLayout from "../components/layouts/MainLayout";
 
 export default function FeedbackPage() {
   const navigate = useNavigate();
@@ -68,24 +68,24 @@ export default function FeedbackPage() {
   }, [isGenerating]);
 
   return (
-    <div className="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen relative overflow-hidden">
-      <div className="relative mx-auto flex h-full min-h-screen w-full max-w-md flex-col overflow-x-hidden bg-background-light dark:bg-background-dark shadow-2xl border-x border-slate-200/50 dark:border-white/5">
-        {/* Header */}
-        <header className="sticky top-0 z-50 light:bg-white/60 dark:bg-background-dark/60 px-4 py-4 backdrop-blur-lg border-b border-slate-200/50 dark:border-white/5">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate(-1)}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-200/50 dark:border-white/5 text-slate-600 dark:text-slate-300 active:scale-90 transition-transform"
-            >
-              <span className="material-symbols-outlined">arrow_back</span>
-            </button>
-            <h1 className="text-xl font-bold tracking-tight">
-              Progress Insights
-            </h1>
-          </div>
-        </header>
+    <MainLayout>
+      {/* Header */}
+      <header className="sticky top-0 z-10 flex items-center justify-between gap-4 py-4 px-4 backdrop-blur-lg">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-200/50 dark:border-white/5 text-slate-600 dark:text-slate-300 active:scale-90 transition-transform"
+          >
+            <span className="material-symbols-outlined">arrow_back</span>
+          </button>
+          <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+            Progress Insights
+          </h1>
+        </div>
+      </header>
 
-        <main className="flex-1 overflow-y-auto pb-32 px-4 py-6 space-y-8 no-scrollbar">
+      <div className="pb-32 pt-6 px-4 w-full">
+        <main className="space-y-8">
           {loading ? (
             <div className="space-y-8 animate-in fade-in duration-500">
               <Skeleton variant="rectangular" className="h-48 w-full rounded-[32px]" />
@@ -177,14 +177,14 @@ export default function FeedbackPage() {
               {/* Detailed Breakdown */}
               <div className="space-y-6">
                 {/* Analysis */}
-                <div className="bg-white dark:bg-slate-950/40 rounded-3xl p-6 border border-slate-100 dark:border-white/5">
+                <div className="bg-white dark:bg-slate-900/60 rounded-3xl p-6 border border-slate-200/60 dark:border-white/5 shadow-sm">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="h-10 w-10 rounded-xl bg-orange-100 dark:bg-orange-500/10 text-orange-600 flex items-center justify-center">
                       <span className="material-symbols-outlined">
                         analytics
                       </span>
                     </div>
-                    <h3 className="font-bold">Deep Analysis</h3>
+                    <h3 className="font-bold text-slate-900 dark:text-white">Deep Analysis</h3>
                   </div>
                   <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
                     {feedbacks[0].analisis}
@@ -192,14 +192,14 @@ export default function FeedbackPage() {
                 </div>
 
                 {/* Concrete Steps */}
-                <div className="bg-white dark:bg-slate-950/40 rounded-3xl p-6 border border-slate-100 dark:border-white/5">
+                <div className="bg-white dark:bg-slate-900/60 rounded-3xl p-6 border border-slate-200/60 dark:border-white/5 shadow-sm">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="h-10 w-10 rounded-xl bg-green-100 dark:bg-green-500/10 text-green-600 flex items-center justify-center">
                       <span className="material-symbols-outlined">
                         lightbulb
                       </span>
                     </div>
-                    <h3 className="font-bold">Saran Konkret</h3>
+                    <h3 className="font-bold text-slate-900 dark:text-white">Saran Konkret</h3>
                   </div>
                   <ul className="space-y-3">
                     {
@@ -214,7 +214,7 @@ export default function FeedbackPage() {
                           {saran}
                         </li>
                       ))
-                        : <p>{feedbacks[0].saran_konkret}</p>
+                        : <p className="text-sm text-slate-600 dark:text-slate-400 font-medium">{feedbacks[0].saran_konkret}</p>
                     }
                   </ul>
                 </div>
@@ -258,21 +258,21 @@ export default function FeedbackPage() {
 
               {/* History Section */}
               {feedbacks.length > 1 && (
-                <div className="pt-8 border-t border-slate-100 dark:border-white/5">
+                <div className="pt-8 border-t border-slate-200 dark:border-white/5">
                   <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1 mb-4">
                     Previous Reports
                   </h3>
-                  <div className="space-y-3">
+                  <div className="grid gap-4 sm:grid-cols-2">
                     {feedbacks.slice(1).map((fb) => (
                       <div
                         key={fb.id}
-                        className="p-4 bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 rounded-2xl flex items-center justify-between"
+                        className="p-4 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-white/5 rounded-2xl flex items-center justify-between shadow-sm"
                       >
                         <div>
-                          <p className="text-xs font-bold text-slate-500">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                             {new Date(fb.created_at).toLocaleDateString()}
                           </p>
-                          <p className="text-sm font-bold mt-1">
+                          <p className="text-sm font-bold mt-1 text-slate-900 dark:text-white">
                             Score: {fb.score_progress}/10
                           </p>
                         </div>
@@ -287,41 +287,39 @@ export default function FeedbackPage() {
             </>
           )}
         </main>
+      </div>
 
-        <BottomBar />
-
-        {/* AI Loading Overlay */}
-        {isGenerating && (
-          <div className="fixed inset-0 z-[110] flex items-center justify-center bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-xl animate-in fade-in duration-500">
-            <div className="max-w-xs w-full text-center px-6">
-              <div className="relative mb-8 mx-auto w-32 h-32">
-                <div className="absolute inset-0 rounded-full border-4 border-primary/20 animate-pulse"></div>
-                <div className="absolute inset-0 rounded-full border-t-4 border-primary animate-spin"></div>
-                <div className="absolute inset-2 rounded-full bg-primary/10 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-primary text-[48px] animate-bounce">
-                    reviews
-                  </span>
-                </div>
-              </div>
-              <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2">
-                AI Reviewing Path
-              </h3>
-              <p className="text-sm font-bold text-primary animate-pulse transition-all duration-500">
-                {loadingMessages[loadingStep]}
-              </p>
-              <div className="mt-8 flex justify-center gap-1">
-                {[0, 1, 2].map((i) => (
-                  <div
-                    key={i}
-                    className={`h-1.5 w-1.5 rounded-full bg-primary animate-bounce`}
-                    style={{ animationDelay: `${i * 0.2}s` }}
-                  ></div>
-                ))}
+      {/* AI Loading Overlay */}
+      {isGenerating && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-xl animate-in fade-in duration-500">
+          <div className="max-w-xs w-full text-center px-6">
+            <div className="relative mb-8 mx-auto w-32 h-32">
+              <div className="absolute inset-0 rounded-full border-4 border-primary/20 animate-pulse"></div>
+              <div className="absolute inset-0 rounded-full border-t-4 border-primary animate-spin"></div>
+              <div className="absolute inset-2 rounded-full bg-primary/10 flex items-center justify-center">
+                <span className="material-symbols-outlined text-primary text-[48px] animate-bounce">
+                  reviews
+                </span>
               </div>
             </div>
+            <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2">
+              AI Reviewing Path
+            </h3>
+            <p className="text-sm font-bold text-primary animate-pulse transition-all duration-500">
+              {loadingMessages[loadingStep]}
+            </p>
+            <div className="mt-8 flex justify-center gap-1">
+              {[0, 1, 2].map((i) => (
+                <div
+                  key={i}
+                  className={`h-1.5 w-1.5 rounded-full bg-primary animate-bounce`}
+                  style={{ animationDelay: `${i * 0.2}s` }}
+                ></div>
+              ))}
+            </div>
           </div>
-        )}
-      </div>
-    </div>
+        </div>
+      )}
+    </MainLayout>
   );
 }

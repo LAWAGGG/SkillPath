@@ -1,5 +1,5 @@
 @import "tailwindcss";
-
+@custom-variant dark (&:where(.dark, .dark *));
 @theme {
   --color-primary: #5048e5;
   --color-primary-dark: #3e37b8;
@@ -34,4 +34,27 @@
 
 body {
   font-family: var(--font-display);
+}
+
+/* Mobile Scroll Hide Utility */
+@media (max-width: 767px) {
+  header.sticky.top-0, nav.fixed.bottom-0 {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  body.scroll-down header.sticky.top-0 {
+    transform: translateY(-100%);
+  }
+
+  body.scroll-down nav.fixed.bottom-0 {
+    transform: translateY(130%);
+  }
+  
+  body.scroll-up header.sticky.top-0 {
+    transform: translateY(0);
+  }
+
+  body.scroll-up nav.fixed.bottom-0 {
+    transform: translateY(0);
+  }
 }

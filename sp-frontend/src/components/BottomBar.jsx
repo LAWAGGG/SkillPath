@@ -18,7 +18,7 @@ export default function BottomBar() {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 mx-auto w-full max-w-md border-t border-slate-200/50 dark:border-white/5 bg-white/70 dark:bg-slate-950/70 backdrop-blur-xl pb-safe">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 w-full border-t border-slate-200/50 dark:border-white/5 bg-white/70 dark:bg-slate-950/70 backdrop-blur-xl pb-safe">
       <div className="flex items-center justify-around px-2 pb-5 pt-3 relative">
         {navItems.map((item, index) => {
           if (item.isAction) {

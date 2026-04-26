@@ -86,7 +86,7 @@ export default function Quiz() {
   if (loading) {
     return (
       <div className="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen relative overflow-hidden flex justify-center">
-        <div className="relative mx-auto flex h-full min-h-screen w-full max-w-md flex-col bg-background-light dark:bg-background-dark shadow-2xl">
+        <div className="relative mx-auto flex h-full min-h-screen w-full flex-col bg-background-light dark:bg-background-dark">
           <header className="bg-white/90 dark:bg-slate-900/90 py-6 px-4 space-y-4 border-b border-slate-200/50 dark:border-white/5">
             <div className="flex items-center gap-3">
               <Skeleton variant="circular" className="h-10 w-10" />
@@ -145,7 +145,7 @@ export default function Quiz() {
 
   return (
     <div className="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen relative overflow-hidden flex justify-center">
-      <div className="relative mx-auto flex h-full min-h-screen w-full max-w-md flex-col bg-background-light dark:bg-background-dark shadow-2xl border-x border-slate-200/50 dark:border-white/5">
+      <div className="relative mx-auto flex h-full min-h-screen w-full flex-col bg-background-light dark:bg-background-dark">
         {/* Header */}
         <header className="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/50 dark:border-white/5 pt-4 pb-2 px-4 shadow-sm">
           <div className="flex items-center justify-between mb-2">

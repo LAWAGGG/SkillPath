@@ -5,92 +5,88 @@ import { setRole, setToken } from "../utils/uttils";
 
 export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [passwordConfirmation, setPasswordConfirmation] = useState("");
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    password_confirmation: "",
+  });
   const [errors, setErrors] = useState([]);
   const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
 
-  async function handleRegister(e) {
+  const handleRegister = (e) => {
     e.preventDefault();
     api
-      .post("/auth/register", {
-        name,
-        email,
-        password,
-        password_confirmation: passwordConfirmation,
-      })
+      .post("/auth/register", formData)
       .then((res) => {
         setToken(res.data.token);
-        setRole(res.data.user.role)
-        if (res.data.user.role == "user") {
-          navigate("/dashboard");
-        } else {
-          navigate("/admin/dashboard")
-        }
+        setRole(res.data.user.role);
+        navigate("/dashboard");
       })
       .catch((error) => {
-        setErrorMessage(error.response?.data?.message || "An error occurred");
-        if (error.response?.status === 422) {
-          setErrors(error.response.data.errors);
+        if (error.response) {
+          setErrorMessage(error.response.data.message);
+          if (error.response.status === 422) {
+            setErrors(error.response.data.errors);
+          }
         }
       });
-  }
+  };
 
   return (
-    <div className="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen relative overflow-hidden">
+    <div className="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen w-full relative overflow-hidden flex flex-col md:flex-row">
       {/* Subtle Dot Background Pattern */}
       <div className="absolute inset-0 dot-pattern opacity-40 pointer-events-none z-0"></div>
 
-      <div className="relative flex flex-col h-full min-h-screen w-full max-w-md mx-auto bg-white dark:bg-slate-900 shadow-2xl overflow-y-auto no-scrollbar z-10">
-        {/* Hero/Header Section */}
-        <div className="relative w-full h-[25vh] min-h-[200px] bg-gradient-to-br from-indigo-600 via-primary to-cyan-500 rounded-b-[2.5rem] flex flex-col justify-between p-8 overflow-hidden">
-          {/* Decorative abstract shapes */}
-          <div className="absolute top-[-20%] right-[-10%] w-64 h-64 bg-white opacity-10 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-[-10%] left-[-10%] w-48 h-48 bg-cyan-300 opacity-20 rounded-full blur-2xl"></div>
+      {/* Hero/Header Section - Left on desktop */}
+      <div className="relative w-full md:w-1/2 h-[35vh] md:h-screen bg-gradient-to-br from-indigo-600 via-primary to-cyan-500 flex flex-col justify-center p-8 md:p-16 overflow-hidden z-10">
+        <div className="absolute top-[-20%] left-[-10%] w-64 h-64 bg-white opacity-10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-48 h-48 bg-cyan-300 opacity-20 rounded-full blur-2xl"></div>
 
-          {/* Logo & Headline */}
-          <div className="z-10 mb-4">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-primary font-bold shadow-lg">
-                <span className="material-symbols-outlined text-[20px]">
-                  code_blocks
-                </span>
-              </div>
-              <span className="text-white font-bold text-xl tracking-tight">
-                SkillPath
+        <div className="z-10">
+          <div className="flex items-center gap-2 mb-6 md:mb-8">
+            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-primary font-bold shadow-lg shadow-black/10">
+              <span className="material-symbols-outlined text-[24px]">
+                code_blocks
               </span>
             </div>
-            <h1 className="text-white text-3xl font-extrabold leading-tight tracking-tight">
-              Roadmap Generator <br />
-              <span className="text-cyan-200">With AI</span>
-            </h1>
+            <span className="text-white font-black text-2xl tracking-tight">
+              SkillPath
+            </span>
           </div>
+          <h1 className="text-white text-4xl md:text-6xl font-black leading-tight tracking-tight mb-4">
+            Start Your <br />
+            <span className="text-cyan-200">Learning Journey</span>
+          </h1>
+          <p className="text-white/80 text-sm md:text-lg font-medium max-w-md hidden md:block">
+            Join thousands of learners building their future with AI-guided roadmaps.
+          </p>
         </div>
+      </div>
 
-        {/* Register Form Section */}
-        <div className="flex-1 px-6 pt-8 pb-8">
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
+      {/* Register Form Section - Right on desktop */}
+      <div className="flex-1 bg-white dark:bg-slate-950 z-10 flex flex-col justify-center items-center p-6 md:p-16 overflow-y-auto no-scrollbar">
+        <div className="w-full max-w-md py-8">
+          <div className="mb-10 text-center md:text-left">
+            <h2 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white mb-2">
               Create account
             </h2>
-            <p className="text-slate-500 dark:text-slate-400">
-              Join us to start generating your roadmaps.
+            <p className="text-sm font-bold text-slate-500 dark:text-slate-400">
+              Set up your profile to start generating roadmaps.
             </p>
             {errorMessage && (
-              <p className="text-red-500 text-sm mt-2">{errorMessage}</p>
+              <div className="mt-4 p-3 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 text-red-500 text-xs font-bold flex items-center gap-2">
+                <span className="material-symbols-outlined text-sm">error</span>
+                {errorMessage}
+              </div>
             )}
           </div>
 
-          <form className="space-y-4" onSubmit={handleRegister}>
+          <form className="space-y-5" onSubmit={handleRegister}>
             {/* Name Field */}
             <div className="space-y-1.5">
-              <label
-                className="block text-sm font-semibold text-slate-700 dark:text-slate-300"
-                htmlFor="name"
-              >
+              <label className="block text-xs font-black uppercase tracking-widest text-slate-400 ml-1">
                 Full Name
               </label>
               <div className="relative">
@@ -100,26 +96,20 @@ export default function Register() {
                   </span>
                 </div>
                 <input
-                  className="block w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-base"
-                  id="name"
-                  placeholder="Enter your full name"
+                  className="block w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-sm font-bold"
+                  required
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="John Doe"
                   type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
                 />
               </div>
-              {errors["name"] && (
-                <p className="text-red-500 text-xs mt-1">{errors["name"]}</p>
-              )}
+              {errors["name"] && <p className="text-red-500 text-[10px] font-bold ml-1">{errors["name"]}</p>}
             </div>
 
             {/* Email Field */}
             <div className="space-y-1.5">
-              <label
-                className="block text-sm font-semibold text-slate-700 dark:text-slate-300"
-                htmlFor="email"
-              >
-                Email
+              <label className="block text-xs font-black uppercase tracking-widest text-slate-400 ml-1">
+                Email Address
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -128,26 +118,20 @@ export default function Register() {
                   </span>
                 </div>
                 <input
-                  className="block w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-base"
-                  id="email"
-                  placeholder="Enter your email"
+                  className="block w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-sm font-bold"
+                  required
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  placeholder="john@example.com"
                   type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
-              {errors["email"] && (
-                <p className="text-red-500 text-xs mt-1">{errors["email"]}</p>
-              )}
+              {errors["email"] && <p className="text-red-500 text-[10px] font-bold ml-1">{errors["email"]}</p>}
             </div>
 
             {/* Password Field */}
             <div className="space-y-1.5">
-              <label
-                className="block text-sm font-semibold text-slate-700 dark:text-slate-300"
-                htmlFor="password"
-              >
-                Password
+              <label className="block text-xs font-black uppercase tracking-widest text-slate-400 ml-1">
+                Create Password
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -156,15 +140,14 @@ export default function Register() {
                   </span>
                 </div>
                 <input
-                  className="block w-full pl-11 pr-12 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-base"
-                  id="password"
+                  className="block w-full pl-11 pr-12 py-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-sm font-bold"
+                  required
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   placeholder="••••••••"
                   type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
                 />
                 <button
-                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 transition-colors"
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                 >
@@ -173,19 +156,12 @@ export default function Register() {
                   </span>
                 </button>
               </div>
-              {errors["password"] && (
-                <p className="text-red-500 text-xs mt-1">
-                  {errors["password"]}
-                </p>
-              )}
+              {errors["password"] && <p className="text-red-500 text-[10px] font-bold ml-1">{errors["password"]}</p>}
             </div>
 
-            {/* Password Confirmation Field */}
+            {/* Confirmation Field */}
             <div className="space-y-1.5">
-              <label
-                className="block text-sm font-semibold text-slate-700 dark:text-slate-300"
-                htmlFor="password_confirmation"
-              >
+              <label className="block text-xs font-black uppercase tracking-widest text-slate-400 ml-1">
                 Confirm Password
               </label>
               <div className="relative">
@@ -195,42 +171,33 @@ export default function Register() {
                   </span>
                 </div>
                 <input
-                  className="block w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-base"
-                  id="password_confirmation"
+                  className="block w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-sm font-bold"
+                  required
+                  onChange={(e) => setFormData({ ...formData, password_confirmation: e.target.value })}
                   placeholder="••••••••"
                   type={showPassword ? "text" : "password"}
-                  value={passwordConfirmation}
-                  onChange={(e) => setPasswordConfirmation(e.target.value)}
                 />
               </div>
             </div>
 
-            {/* Main Action Button */}
             <button
-              className="w-full bg-primary hover:bg-primary-dark active:scale-[0.98] text-white font-bold py-3.5 rounded-xl shadow-lg shadow-primary/30 transition-all duration-200 flex items-center justify-center gap-2 mt-2"
+              className="w-full bg-primary hover:bg-primary-dark active:scale-[0.98] text-white font-black py-4 rounded-2xl shadow-xl shadow-primary/30 transition-all duration-200 flex items-center justify-center gap-2 mt-4"
               type="submit"
             >
-              <span>Sign up</span>
-              <span className="material-symbols-outlined text-[20px]">
-                person_add
-              </span>
+              <span>Register</span>
             </button>
           </form>
 
-          {/* Footer Link */}
-          <p className="mt-8 text-center text-sm text-slate-600 dark:text-slate-400">
+          <p className="mt-8 text-center text-sm font-bold text-slate-500">
             Already have an account?
             <Link
               to="/"
-              className="font-bold text-primary hover:text-primary-dark transition-colors ms-1"
+              className="text-primary hover:text-primary-dark transition-colors ms-2"
             >
-              Log in
+              Log in instead
             </Link>
           </p>
         </div>
-
-        {/* Bottom padding for iOS home indicator */}
-        <div className="h-6"></div>
       </div>
     </div>
   );

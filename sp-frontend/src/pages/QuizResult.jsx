@@ -30,7 +30,7 @@ export default function QuizResult() {
   if (loading) {
     return (
       <div className="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen relative overflow-hidden flex justify-center">
-        <div className="relative mx-auto flex h-full min-h-screen w-full max-w-md flex-col bg-background-light dark:bg-background-dark shadow-2xl">
+        <div className="relative mx-auto flex h-full min-h-screen w-full flex-col bg-background-light dark:bg-background-dark">
           <header className="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/50 dark:border-white/5 pt-4 pb-4 px-4 shadow-sm flex items-center gap-3">
             <Skeleton variant="circular" className="h-10 w-10" />
             <Skeleton variant="text" className="h-6 w-32" />
@@ -92,7 +92,7 @@ export default function QuizResult() {
 
   return (
     <div className="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen relative overflow-hidden flex justify-center">
-      <div className="relative mx-auto flex h-full min-h-screen w-full max-w-md flex-col bg-background-light dark:bg-background-dark shadow-2xl border-x border-slate-200/50 dark:border-white/5 pb-24">
+      <div className="relative mx-auto flex h-full min-h-screen w-full flex-col bg-background-light dark:bg-background-dark pb-24">
         {/* Header */}
         <header className="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/50 dark:border-white/5 pt-4 pb-4 px-4 shadow-sm flex items-center justify-between">
           <button
