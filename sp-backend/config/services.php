@@ -28,10 +28,15 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
-    'gemini'=> [
+    'gemini' => [
         'key'            => env('GEMINI_API_KEY'),
         'model'          => env('GEMINI_MODEL', 'gemini-2.5-flash'),
         'fallback_model' => env('GEMINI_FALLBACK_MODEL', 'gemini-2.5-flash-lite'),
+    ],
+
+    'tavily' => [
+        'key'       => env('TAVILY_API_KEY'),
+        'cache_ttl' => env('TAVILY_CACHE_TTL', 604800),
     ],
 
     'slack' => [
