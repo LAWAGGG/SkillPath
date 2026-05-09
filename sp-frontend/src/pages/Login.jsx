@@ -29,6 +29,7 @@ export default function Login() {
       })
       .catch((error) => {
         if (error.response) {
+          console.log(error.response)
           setErrorMessage(error.response.data.message);
           if (error.response.status == 422) {
             setErrors(error.response.data.errors);

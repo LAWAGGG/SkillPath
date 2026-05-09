@@ -62,6 +62,23 @@ export default function RoadmapDetail() {
     }).catch(() => setLoading(false));
   }
 
+  async function handleDownloadCertificate() {
+    try {
+      const response = await api.get(`/roadmaps/${params.id}/certificate`, {
+        responseType: "blob",
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `Certificate-${roadmap.title}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      alert("Gagal mendownload sertifikat. Silakan coba lagi.");
+    }
+  }
+
   async function handleGenerateFeedback() {
     setIsGeneratingFeedback(true);
     api
@@ -476,15 +493,26 @@ export default function RoadmapDetail() {
                   You've mastered every topic in this path. The world of{" "}
                   {roadmap.skill?.name} is now yours to conquer.
                 </p>
-                <button
-                  onClick={() => navigate(`/roadmap/${params.id}/feedback`)}
-                  className="w-full py-4 bg-white text-primary rounded-2xl font-black text-sm shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2"
-                >
-                  <span className="material-symbols-outlined text-[20px]">
-                    auto_awesome
-                  </span>
-                  Give Me Feedback
-                </button>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
+                  <button
+                    onClick={() => navigate(`/roadmap/${params.id}/feedback`)}
+                    className="w-full py-4 bg-white text-primary rounded-2xl font-black text-sm shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2"
+                  >
+                    <span className="material-symbols-outlined text-[20px]">
+                      auto_awesome
+                    </span>
+                    Give Me Feedback
+                  </button>
+                  <button
+                    onClick={handleDownloadCertificate}
+                    className="w-full py-4 bg-primary-dark text-white rounded-2xl font-black text-sm shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 border border-white/20"
+                  >
+                    <span className="material-symbols-outlined text-[20px]">
+                      card_membership
+                    </span>
+                    Download Certificate
+                  </button>
+                </div>
               </div>
             </div>
           </div>

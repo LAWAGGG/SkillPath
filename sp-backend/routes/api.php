@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AiFeedbackController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\QuizzController;
 use App\Http\Controllers\QuizzQuestionController;
 use App\Http\Controllers\SkillController;
@@ -34,6 +35,7 @@ Route::middleware("auth:sanctum")->group(function () {
     Route::delete("/roadmaps/{id}", [RoadmapController::class, "destroy"]);
     Route::put("/roadmaps/{id}/evaluate", [RoadmapController::class, "update"]);
     Route::get("/roadmaps/{roadmapId}/topic/{topicId}", [RoadmapController::class, "showTopic"]);
+    Route::get("/roadmaps/{id}/certificate", [CertificateController::class, "download"]);
 
     //update progress
     Route::patch("/topics/{id}/toggle", [RoadmapTopicController::class, "update"]);

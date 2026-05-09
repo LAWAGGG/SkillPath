@@ -53,9 +53,21 @@ class RoadmapController extends Controller
         ]);
     }
 
-    public function adminRoadmaps()
+    public function adminRoadmaps(Request $request)
     {
-        $roadmaps = Roadmap::with("user", "skill", "roadmapPhases.roadmapTopics")->latest()->get();
+        $query = Roadmap::with("user", "skill", "roadmapPhases.roadmapTopics");
+
+        if ($request->skill_id) {
+            $query->where("skill_id", $request->skill_id);
+        }
+
+        if ($request->category_id) {
+            $query->whereHas("skill", function ($q) use ($request) {
+                $q->where("skill_category_id", $request->category_id);
+            });
+        }
+
+        $roadmaps = $query->latest()->get();
 
         return response()->json([
             "success" => true,

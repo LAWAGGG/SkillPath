@@ -85,8 +85,8 @@ class TavilyService
             }
 
             foreach ($phase['topics'] as &$topic) {
-                // Skip jika topik sudah punya resource valid (dari AI atau topik lama)
-                if ($this->hasValidResources($topic['resources'] ?? [])) {
+                // Skip jika topik sudah punya resource lengkap (1 text + 1 video)
+                if ($this->hasRequiredResources($topic['resources'] ?? [])) {
                     continue;
                 }
 
@@ -149,7 +149,7 @@ class TavilyService
                     'include_answer'         => false,
                     'include_raw_content'    => false,
                     'include_images'         => false,
-                    'max_results'            => $maxResults + 2, // ambil lebih, filter nanti
+                    'max_results'            => 10,            // Ambil lebih banyak (10) untuk memastikan ada variasi tipe
                     // Fokus ke domain edukatif & teknikal
                     'include_domains'        => [
                         'developer.mozilla.org',
@@ -169,6 +169,7 @@ class TavilyService
                         'digitalocean.com',
                         'baeldung.com',
                         'geeksforgeeks.org',
+                        'w3schools.com',
                     ],
                 ]);
 
@@ -196,16 +197,14 @@ class TavilyService
 
     /**
      * Ubah hasil mentah Tavily menjadi format TopicResource SkillPath.
+     * Dipastikan mengembalikan 1 Doc/Article dan 1 Video jika tersedia.
      */
     private function parseResults(array $results, int $max): array
     {
-        $resources = [];
+        $textResult  = null;
+        $videoResult = null;
 
         foreach ($results as $result) {
-            if (count($resources) >= $max) {
-                break;
-            }
-
             $url   = $result['url']   ?? '';
             $title = $result['title'] ?? '';
 
@@ -213,14 +212,40 @@ class TavilyService
                 continue;
             }
 
-            $resources[] = [
+            $type = $this->detectType($url);
+            $resource = [
                 'title' => $this->cleanTitle($title),
                 'url'   => $url,
-                'type'  => $this->detectType($url),
+                'type'  => $type,
             ];
+
+            if ($type === 'video') {
+                if (!$videoResult) {
+                    $videoResult = $resource;
+                }
+            } else {
+                // documentation atau article
+                if (!$textResult) {
+                    $textResult = $resource;
+                }
+            }
+
+            // Jika sudah dapat keduanya, berhenti
+            if ($textResult && $videoResult) {
+                break;
+            }
         }
 
-        return $resources;
+        $final = [];
+        // Urutan: Documentation/Article baru kemudian Video
+        if ($textResult) {
+            $final[] = $textResult;
+        }
+        if ($videoResult) {
+            $final[] = $videoResult;
+        }
+
+        return $final;
     }
 
     /**
@@ -242,6 +267,7 @@ class TavilyService
             'vuejs.org/guide',
             'nextjs.org/docs',
             'typescript-lang.org',
+            'w3schools.com',
             'docs.',
             '/docs/',
             '/documentation/',
@@ -264,51 +290,32 @@ class TavilyService
     private function cleanTitle(string $title): string
     {
         // Hapus suffix seperti "| Medium", "- DEV Community", "- YouTube"
-        $title = preg_replace('/\s*[\|\-–]\s*(Medium|DEV Community|YouTube|GeeksforGeeks|freeCodeCamp|Towards Data Science).*$/i', '', $title);
+        $title = preg_replace('/\s*[\|\-–]\s*(Medium|DEV Community|YouTube|GeeksforGeeks|freeCodeCamp|Towards Data Science|W3Schools).*$/i', '', $title);
 
         return trim($title);
     }
 
     /**
-     * Cek apakah resource array sudah berisi URL valid (bukan placeholder/dummy).
+     * Cek apakah resource array sudah berisi resource yang dibutuhkan (1 text, 1 video).
      */
-    private function hasValidResources(array $resources): bool
+    private function hasRequiredResources(array $resources): bool
     {
         if (empty($resources)) {
             return false;
         }
 
-        $invalidPatterns = [
-            'search_query=',      // YouTube search URL (bukan video langsung)
-            'google.com/search',  // Google search URL
-            'example.com',
-            'placeholder',
-            'dummy',
-            '#',
-        ];
-
-        $validCount = 0;
+        $hasText  = false;
+        $hasVideo = false;
 
         foreach ($resources as $resource) {
-            $url = $resource['url'] ?? '';
-
-            if (empty($url)) {
-                continue;
-            }
-
-            $isInvalid = false;
-            foreach ($invalidPatterns as $pattern) {
-                if (str_contains(strtolower($url), $pattern)) {
-                    $isInvalid = true;
-                    break;
-                }
-            }
-
-            if (!$isInvalid) {
-                $validCount++;
+            $type = $resource['type'] ?? '';
+            if ($type === 'video') {
+                $hasVideo = true;
+            } elseif ($type === 'article' || $type === 'documentation') {
+                $hasText = true;
             }
         }
 
-        return $validCount > 0;
+        return $hasText && $hasVideo;
     }
 }
